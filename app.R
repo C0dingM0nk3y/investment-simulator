@@ -102,7 +102,7 @@ server <- function(input, output) {
     df[,"daysFromStart"] <- 1:nrow(df)-1
     df[,"filter"] <- ifelse(df$daysFromStart %% 20 ==0, TRUE, FALSE)
     
-    ss <- subset(df, filter == TRUE, select = c("avg_price", "daysFromStart"))
+    ss <- subset(df, filter == TRUE, select = c("avg_price", "Adjusted", "daysFromStart"))
     
     # SIMULATE PURCHASE
     ss[,"value_inv"] <- inv_qnt
@@ -124,6 +124,17 @@ server <- function(input, output) {
     time <- difftime(tail(row.names(df), 1), head(row.names(df), 1), units = "weeks") %>%
       as.numeric()/52 
     finalRatio <- tail(ss$ratioTEMP, 1)
+    
+    #ADJCALC
+    ss[,"buy_adj"] <- with(ss, value_inv/Adjusted)
+    ss[,"cum_adj"] <- cumsum(ss$buy_adj)
+    ss[,"cum_adjVal"] <- ss$cum_adj*latestPrice
+    ss[,"ROI_adj"] <- with(ss, (cum_adjVal-cum_inv)/cum_inv)
+    ss[,"ratioTEMP_Adj"] <- with(ss, cum_adjVal/cum_inv)
+    
+    for (n in 1:30){
+      print(paste(n , 1.06^n))
+    }
     
     # ORGANIZE RESULTS
     res <- ss
