@@ -77,7 +77,7 @@ ui <- fluidPage(
                          #p("Try for yourself by using the tool below to see the effect of a DCA of differetn kind of assets."),
                          hr(),
                          h4("This webtool uses historical data from Yahoo Finance to simulate the effect of a DCA on most common investment options"),
-                        p(u("Challenge:"),em("can you find one that did NOT produce income, after >20 years? ;)"),
+                         h4(u("Challenge:"),em("can you find one that did NOT produce income, after >20 years? ;)"),
                          
                ),
              ),
@@ -108,6 +108,7 @@ ui <- fluidPage(
            
            column(3, #offset = 1,
                   h3("2. Investment Start Date"),
+                  uiOutput("ui_startDate"),
                   sliderInput("years",
                               "How long ago should the investment start? (years)",
                               value = 10, min = 1, max = 40, step = 1, ticks = FALSE),
@@ -124,13 +125,14 @@ ui <- fluidPage(
   hr(),
   
   fluidRow(
-    h1("some nice plot!")
+    h1("some nice plot!"),
+
   ),
   hr(),
   
   fluidRow(
     column(10, offset = 1, align = "center",
-        p("add this note somewhere: when used in combination with a ETF, (aka, investing on the whole market at ONCE), DCA are one of the safest and more reliable sources of passive income.",
+        p("add this note somewhere: when used in combination with a ETF (aka, investing on the whole market at ONCE), DCA are one of the safest and more reliable sources of passive income.",
         a(href="https://www.investopedia.com/terms/e/etf.asp", "(what is a ETF?)"),
         ),
            
@@ -144,9 +146,35 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
+  #FAKE INPUTS
   symbol <- "SPY"
   startdate <- "1980-01-01" %>% as.Date()
   inv_qnt <- 100
+  
+  symbolData <- reactiveVal(
+    {
+      getSymbols(symbol, 
+                 from = startdate,
+                 auto.assign = FALSE)
+    }
+  )
+  
+  symbolStart <- reactiveVal(
+    {
+      xts <- getSymbols(symbol, 
+                 from = "1950-01-01", #recovers the earliest available data
+                 auto.assign = FALSE) %>% as.data.frame()
+      minDate <- row.names(xts) %>% as.Date() %>% min()
+      minDate
+    }
+  )
+  
+  # OUTPUT: UI
+  output$ui_startDate <- renderUI(
+      renderUI(sliderInput(inputId = "startdate", label="Select Start Date",
+                           min = symbolStart(), max=today()-366,
+                           value=symbolStart()))
+  )
   
   simulateInv <- function(symbol, startdate, inv_qnt){
     # DOWNLOAD LATEST DATA FROM YAHOO
