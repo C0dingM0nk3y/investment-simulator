@@ -92,6 +92,7 @@ ui <- fluidPage(
            column(3, #offset = 1,
                   inputPanel(
                     h3("Simulation parameters"),
+                    actionButton("runAnalysis", "Analyze")
                   ),
            ),
            
@@ -110,17 +111,14 @@ ui <- fluidPage(
                   h3("2. Investment Start Date"),
                   uiOutput("ui_startDate"),
                   p("Investment duration:", strong(textOutput("duration", inline = T))),
-                  sliderInput("years",
-                              "How long ago should the investment start? (years)",
-                              value = 10, min = 1, max = 40, step = 1, ticks = FALSE),
                   p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
            ),
            
            column(3, #offset = 1,
                   h3("3. Investment Amount"),
                   numericInput("monthly_inv",
-                               "How much was invested (per month)?",
-                               value = 100, min = 10, step = 100),
+                               "How much was invested (every MONTH)?",
+                               value = 100, min = 0, step = 100),
            ),
     ),
   hr(),
@@ -149,9 +147,9 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   #USES DEFAULT INPUTS TO BUILD UI
-  symbol <- "SPY"
-  startdate <- "1980-01-01" %>% as.Date()
-  inv_qnt <- 100
+  #symbol <- "SPY"
+  #startdate <- "1980-01-01" %>% as.Date()
+  #inv_qnt <- 100
   
   symbolData <- reactiveVal(
     {
@@ -184,13 +182,12 @@ server <- function(input, output) {
       floor() %>% 
       paste("years")
   )
-    
   
   simulateInv <- function(symbol, startdate, inv_qnt){
     # DOWNLOAD LATEST DATA FROM YAHOO
     xts <- getSymbols(symbol, 
-                       from = startdate,
-                       auto.assign = FALSE) #required to assign to custom variable name
+                      from = startdate,
+                      auto.assign = FALSE) #required to assign to custom variable name
     
     # CALCULATE AVERAGE PRICE 
     # removes symbol name from df headers #eg. from SPY.Open to SPY
@@ -201,7 +198,7 @@ server <- function(input, output) {
     df[,"avg_price"] <- (df$Open + df$Close)/2 # average price (mean of OPEN and CLOSE price)
     
     # CREATE SUBSET: 1 INVESTMENT EVERY 30 days
-
+    
     #> Starting from startdate, subset table to only show prices on the days where a new investment was done.
     #> NB: market is closed on SAT-SUN. Therefore the market data are missing all the rows corresponging to holidays.
     #> For this reason, 1 investment every 30 days is converted into 1 investment every 20 work-days.
@@ -250,10 +247,17 @@ server <- function(input, output) {
     return(res)
   }
   
-  output$table <- renderDataTable(
-    simulateInv(symbol, startdate, inv_qnt)
+               
+  observeEvent(input$runAnalysis,
+                 {
+                   output$table <- renderDataTable(
+                     #isolate variable to avoid constant refreshing while user set parameters
+                     simulateInv(isolate(input$symbol), 
+                                isolate(input$startdate), 
+                                isolate(input$monthly_inv))
+                   )
+                 }
   )
-
 
 }
 
