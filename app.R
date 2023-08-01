@@ -109,6 +109,7 @@ ui <- fluidPage(
            column(3, #offset = 1,
                   h3("2. Investment Start Date"),
                   uiOutput("ui_startDate"),
+                  p("Investment duration:", strong(textOutput("duration", inline = T))),
                   sliderInput("years",
                               "How long ago should the investment start? (years)",
                               value = 10, min = 1, max = 40, step = 1, ticks = FALSE),
@@ -175,6 +176,15 @@ server <- function(input, output) {
                              value=minDate))
     }
   )
+  
+  # OUTPUT: DATASET
+  output$duration <- renderText(
+    difftime(today(), input$startdate, units = "weeks") %>% 
+      divide_by(52) %>%
+      floor() %>% 
+      paste("years")
+  )
+    
   
   simulateInv <- function(symbol, startdate, inv_qnt){
     # DOWNLOAD LATEST DATA FROM YAHOO
