@@ -126,6 +126,7 @@ ui <- fluidPage(
   
   fluidRow(
     h1("some nice plot!"),
+    dataTableOutput("table")
 
   ),
   hr(),
@@ -146,7 +147,7 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
-  #FAKE INPUTS
+  #USES DEFAULT INPUTS TO BUILD UI
   symbol <- "SPY"
   startdate <- "1980-01-01" %>% as.Date()
   inv_qnt <- 100
@@ -159,21 +160,20 @@ server <- function(input, output) {
     }
   )
   
-  symbolStart <- reactiveVal(
-    {
-      xts <- getSymbols(symbol, 
-                 from = "1950-01-01", #recovers the earliest available data
-                 auto.assign = FALSE) %>% as.data.frame()
-      minDate <- row.names(xts) %>% as.Date() %>% min()
-      minDate
-    }
-  )
-  
   # OUTPUT: UI
   output$ui_startDate <- renderUI(
+    {
+      #this only runs on start-up
+      minDate <- getSymbols(input$symbol, 
+                        from = "1950-01-01", #recovers the earliest available data
+                        auto.assign = FALSE) %>% as.data.frame() %>%
+        row.names() %>% as.Date() %>% min() #assign to reactive variable
+      
+      #runs every time reactive var is changed
       renderUI(sliderInput(inputId = "startdate", label="Select Start Date",
-                           min = symbolStart(), max=today()-366,
-                           value=symbolStart()))
+                             min = minDate, max=today()-366,
+                             value=minDate))
+    }
   )
   
   simulateInv <- function(symbol, startdate, inv_qnt){
@@ -240,7 +240,9 @@ server <- function(input, output) {
     return(res)
   }
   
-  DF <- simulateInv(symbol, startdate, inv_qnt)
+  output$table <- renderDataTable(
+    simulateInv(symbol, startdate, inv_qnt)
+  )
 
 
 }
