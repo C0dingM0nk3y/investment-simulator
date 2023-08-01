@@ -113,32 +113,20 @@ ui <- fluidPage(
                               value = 10, min = 1, max = 40, step = 1, ticks = FALSE),
                   p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
            ),
-    
-),
+           
+           column(3, #offset = 1,
+                  h3("3. Investment Amount"),
+                  numericInput("monthly_inv",
+                               "How much was invested (per month)?",
+                               value = 100, min = 10, step = 100),
+           ),
+    ),
+  hr(),
   
-  sidebarLayout(
-    sidebarPanel(
-      h2("Step 1"),
-      h3("Simulation Duration"),
-    ),
-    mainPanel(
-      
-    ),
+  fluidRow(
+    h1("some nice plot!")
   ),
-  
-  sidebarLayout(
-    sidebarPanel(
-      h2("Step 2"),
-      h3("Investment Amount"),
-    ),
-    mainPanel(
-      numericInput("monthly_inv",
-                   "How much was invested (per month)?",
-                   value = 100, min = 10, step = 100),
-    ),
-  ),
-  
-  
+  hr(),
   
   fluidRow(
     column(10, offset = 1, align = "center",
