@@ -252,6 +252,7 @@ server <- function(input, output) {
     # current value of investment
     latestPrice <- tail(df$Price_AVG, 1)
     ss[,"cum_value"] <- ss$cum_qnt*latestPrice
+    ss[,"cum_valueAtTime"] <- with(ss, cum_qnt*Price_AVG)
     
     # ROI
     ss[,"ratioTEMP"] <- with(ss, cum_value/cum_inv)
@@ -286,8 +287,9 @@ server <- function(input, output) {
                    output$plot <- renderPlot(
                      REACT$simulation %>% 
                        ggplot() +
-                       geom_line(aes(x=Date, y=value_inv)) +
+                       geom_line(aes(x=Date, y=cum_inv)) +
                        geom_line(aes(x=Date, y=cum_value)) +
+                       geom_line(aes(x=Date, y=cum_valueAtTime, color="red")) +
                        theme_light()
                    )
                    
