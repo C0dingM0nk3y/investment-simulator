@@ -194,24 +194,25 @@ server <- function(input, output) {
       
       REACT$minDate <- row.names(REACT$data_full) %>% 
         as.Date() %>% min()
+    })
+  
       
-      # First, create the reactive slider UI (needed to get default input$startdate value
-      output$ui_startDate <- renderUI(sliderInput(inputId = "startdate", label="Select Start Date",
-                                                  min = REACT$minDate, max=today()-366,
-                                                  value=REACT$minDate))
-      
-      # Second, render plot
-      output$market <- renderPlot({
-        ggplot(data = data_full) +
-          geom_line(aes(x=Date, y=Price_AVG)) +
-          geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", size =0.9) +
-          annotate(geom="label", 
-                   label="Inv. Start", hjust=0, fill="lightblue",
-                   x=as.POSIXct(input$startdate+365), y=max(data_full$Price_AVG)*0.9) +
-          theme_light()
+  # First, create the reactive slider UI (needed to get default input$startdate value
+  output$ui_startDate <- renderUI(sliderInput(inputId = "startdate", label="Select Start Date",
+                                              min = REACT$minDate, max=today()-366,
+                                              value=REACT$minDate))
+  
+  # Second, render plot
+  output$market <- renderPlot({
+    ggplot(data = REACT$data_full) +
+      geom_line(aes(x=Date, y=Price_AVG)) +
+      geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", size =0.9) +
+      annotate(geom="label", 
+               label="Inv. Start", hjust=0, fill="lightblue",
+               x=as.POSIXct(input$startdate+180), y=max(REACT$data_full$Price_AVG)*0.9) +
+      theme_light()
       })
-    }
-  )
+  
   
   # OUTPUT: TEXT (Investment Duration)
   output$duration <- renderText(
