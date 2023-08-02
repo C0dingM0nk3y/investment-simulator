@@ -13,6 +13,7 @@ library(magrittr)
 library(dplyr)
 library(stringr)
 library(lubridate)
+library(ggplot2)
 
 u <- function(text){ #quick formatting
   underlinedText <- span(style="text-decoration:underline",
@@ -58,7 +59,7 @@ ui <- fluidPage(
                    a(href="https://en.wikipedia.org/wiki/Dollar_cost_averaging", "link to wikipedia"),
                    br(),
                    "DCA refers to the practice of purchasing a ",strong("fixed value"), "of a asset at a", strong("specific interval of time"), "and", strong("regardless of current market price"), br(),
-                   em("For example, a simple DCA strategy may be to buy 100€ worth of SP500 ETF every 30 days. This is the defoult setting for this web-tool."),
+                   em("For example, a simple DCA strategy may be to buy 100€ worth of an ETF tracking the S&P500 index every 30 days. This is the defoult setting for this web-tool."),
                  ),
                  p("DCA is one of the simpler-yet-effective LONG-TERM investment strategy. As there is ", u("no attempt to time the market"), "this strategy can be completely passive, and there is no need for the investor to costantly be updated on current market situation. By splitting the investment into many small instances, the investor is buying the asset on an average price, and minimizing the effect of market volatility. While there may be time at which the investment will seem to be in loss, keep buying at a discounted price will ensure an even higher profit on the subsequent expansion phase f the market."),
                ),
@@ -109,6 +110,7 @@ ui <- fluidPage(
            
            column(3, #offset = 1,
                   h3("2. Investment Start Date"),
+                  plotOutput("market", height = "150px"),
                   uiOutput("ui_startDate"),
                   p("Investment duration:", strong(textOutput("duration", inline = T))),
                   p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
@@ -124,10 +126,12 @@ ui <- fluidPage(
   hr(),
   
   fluidRow(
-    h1("some nice plot!"),
-    dataTableOutput("table")
-
+    column(10, offset = 1,
+      h1("some nice plot!"),
+      dataTableOutput("table"),
+    ),
   ),
+
   hr(),
   
   fluidRow(
@@ -151,37 +155,69 @@ server <- function(input, output) {
   #startdate <- "1980-01-01" %>% as.Date()
   #inv_qnt <- 100
   
-  symbolData <- reactiveVal(
-    {
-      getSymbols(symbol, 
-                 from = startdate,
-                 auto.assign = FALSE)
-    }
-  )
+  # OUTPUT: PLOT Market trends
+  symbolData <- function(symbol, startdate){
+    #> get data using quantmod::getSymbolData(), then 
+    #> perform basic df tidying, like adding Date column and calculating AVG price
+
+    # DOWNLOAD LATEST DATA FROM YAHOO
+    xts <- getSymbols(symbol, 
+                      from = startdate,
+                      auto.assign = FALSE) #required to assign to custom variable name
+    
+    # CALCULATE AVERAGE PRICE 
+    # removes symbol name from df headers #eg. from SPY.Open to SPY
+    df <- data.frame(xts) #converts from xts object to standard df
+    colnames(df) %<>% str_remove(symbol)  %>% #remove symbol names
+      str_remove(".")
+    
+    df[,"Price_AVG"] <- (df$Open + df$Close)/2 # average price (mean of OPEN and CLOSE price)
+    
+    # ADD Posit Column (for plotting purposes)
+    df[,"Date"] <- row.names(df) %>% as.POSIXct()
+    
+    return(df)
+  }
   
-  # OUTPUT: UI
-  output$ui_startDate <- renderUI(
+  # OUTPUT: UI (Custom Slider and Market preview)
+  output$market <- renderPlot(
     {
       #this only runs on start-up
-      minDate <- getSymbols(input$symbol, 
-                        from = "1950-01-01", #recovers the earliest available data
-                        auto.assign = FALSE) %>% as.data.frame() %>%
-        row.names() %>% as.Date() %>% min() #assign to reactive variable
+      data_full <- symbolData(input$symbol, 
+                              startdate = "1950-01-01") #recovers the earliest available data
       
-      #runs every time reactive var is changed
-      renderUI(sliderInput(inputId = "startdate", label="Select Start Date",
-                             min = minDate, max=today()-366,
-                             value=minDate))
+      minDate <- row.names(data_full) %>% 
+        as.Date() %>% min()
+      
+      # First, create the reactive slider UI (needed to get default input$startdate value
+      output$ui_startDate <- renderUI(sliderInput(inputId = "startdate", label="Select Start Date",
+                                                  min = minDate, max=today()-366,
+                                                  value=minDate))
+      
+      # Second, render plot
+      output$market <- renderPlot({
+        ggplot(data = data_full) +
+          geom_line(aes(x=Date, y=Price_AVG)) +
+          geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", size =0.9) +
+          annotate(geom="label", 
+                   label="Inv. Start", hjust=0, fill="lightblue",
+                   x=as.POSIXct(input$startdate+365), y=max(data_full$Price_AVG)*0.9) +
+          theme_light()
+      })
     }
   )
   
-  # OUTPUT: DATASET
+  # OUTPUT: TEXT (Investment Duration)
   output$duration <- renderText(
     difftime(today(), input$startdate, units = "weeks") %>% 
       divide_by(52) %>%
       floor() %>% 
       paste("years")
   )
+  
+
+  
+  
   
   simulateInv <- function(symbol, startdate, inv_qnt){
     # DOWNLOAD LATEST DATA FROM YAHOO
@@ -192,10 +228,10 @@ server <- function(input, output) {
     # CALCULATE AVERAGE PRICE 
     # removes symbol name from df headers #eg. from SPY.Open to SPY
     df <- data.frame(xts) #converts from xts object to standard df
-    colnames(df) %<>% str_remove(symbol)  %>% 
+    colnames(df) %<>% str_remove(symbol)  %>% #remove symbol names
       str_remove(".")
     
-    df[,"avg_price"] <- (df$Open + df$Close)/2 # average price (mean of OPEN and CLOSE price)
+    df[,"Price_AVG"] <- (df$Open + df$Close)/2 # average price (mean of OPEN and CLOSE price)
     
     # CREATE SUBSET: 1 INVESTMENT EVERY 30 days
     
@@ -207,18 +243,18 @@ server <- function(input, output) {
     df[,"daysFromStart"] <- 1:nrow(df)-1
     df[,"filter"] <- ifelse(df$daysFromStart %% 20 ==0, TRUE, FALSE)
     
-    ss <- subset(df, filter == TRUE, select = c("avg_price", "Adjusted", "daysFromStart"))
+    ss <- subset(df, filter == TRUE, select = c("Price_AVG", "Adjusted", "daysFromStart"))
     
     # SIMULATE PURCHASE
     ss[,"value_inv"] <- inv_qnt
-    ss[,"buy_qnt"] <- with(ss, value_inv/avg_price)
+    ss[,"buy_qnt"] <- with(ss, value_inv/Price_AVG)
     
     # cumulative calc
     ss[,"cum_inv"] <- cumsum(ss$value_inv)
     ss[,"cum_qnt"] <- cumsum(ss$buy_qnt)
     
     # current value of investment
-    latestPrice <- tail(df$avg_price, 1)
+    latestPrice <- tail(df$Price_AVG, 1)
     ss[,"cum_value"] <- ss$cum_qnt*latestPrice
     
     # ROI
@@ -258,6 +294,7 @@ server <- function(input, output) {
                    )
                  }
   )
+  
 
 }
 
