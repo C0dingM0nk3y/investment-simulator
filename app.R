@@ -130,6 +130,7 @@ ui <- fluidPage(
   fluidRow(
     column(10, offset = 1,
       h1("some nice plot!"),
+      plotOutput("plot"),
       dataTableOutput("table"),
     ),
   ),
@@ -238,7 +239,7 @@ server <- function(input, output) {
     df[,"daysFromStart"] <- 1:nrow(df)-1
     df[,"filter"] <- ifelse(df$daysFromStart %% 20 ==0, TRUE, FALSE)
     
-    ss <- subset(df, filter == TRUE, select = c("Price_AVG", "Adjusted", "daysFromStart"))
+    ss <- subset(df, filter == TRUE, select = c("Date","Price_AVG", "Adjusted", "daysFromStart"))
     
     # SIMULATE PURCHASE
     ss[,"value_inv"] <- inv_qnt
@@ -268,10 +269,6 @@ server <- function(input, output) {
     ss[,"ROI_adj"] <- with(ss, (cum_adjVal-cum_inv)/cum_inv)
     ss[,"ratioTEMP_Adj"] <- with(ss, cum_adjVal/cum_inv)
     
-    for (n in 1:30){
-      print(paste(n , 1.06^n))
-    }
-    
     # ORGANIZE RESULTS
     res <- ss
     
@@ -285,6 +282,14 @@ server <- function(input, output) {
                    REACT$simulation <- simulateInv(isolate(input$symbol), 
                                                    isolate(input$startdate), 
                                                    isolate(input$monthly_inv))
+                   
+                   output$plot <- renderPlot(
+                     REACT$simulation %>% 
+                       ggplot() +
+                       geom_line(aes(x=Date, y=value_inv)) +
+                       geom_line(aes(x=Date, y=cum_value)) +
+                       theme_light()
+                   )
                    
                    output$table <- renderDataTable(
                      REACT$simulation
