@@ -222,23 +222,11 @@ server <- function(input, output) {
       paste("years")
   )
   
-
-  
-  
   
   simulateInv <- function(symbol, startdate, inv_qnt){
-    # DOWNLOAD LATEST DATA FROM YAHOO
-    xts <- getSymbols(symbol, 
-                      from = startdate,
-                      auto.assign = FALSE) #required to assign to custom variable name
     
-    # CALCULATE AVERAGE PRICE 
-    # removes symbol name from df headers #eg. from SPY.Open to SPY
-    df <- data.frame(xts) #converts from xts object to standard df
-    colnames(df) %<>% str_remove(symbol)  %>% #remove symbol names
-      str_remove(".")
-    
-    df[,"Price_AVG"] <- (df$Open + df$Close)/2 # average price (mean of OPEN and CLOSE price)
+    # RE-IMPORT asset data, starting from start date #FUTURE: this may be a filter set on REACT$data_full
+    df <- symbolData(symbol, startdate)
     
     # CREATE SUBSET: 1 INVESTMENT EVERY 30 days
     
@@ -290,14 +278,16 @@ server <- function(input, output) {
     return(res)
   }
   
-               
+  # Update plots and tables             
   observeEvent(input$runAnalysis,
                  {
+                   #isolate variable to avoid constant refreshing while user set parameters
+                   REACT$simulation <- simulateInv(isolate(input$symbol), 
+                                                   isolate(input$startdate), 
+                                                   isolate(input$monthly_inv))
+                   
                    output$table <- renderDataTable(
-                     #isolate variable to avoid constant refreshing while user set parameters
-                     simulateInv(isolate(input$symbol), 
-                                isolate(input$startdate), 
-                                isolate(input$monthly_inv))
+                     REACT$simulation
                    )
                  }
   )
