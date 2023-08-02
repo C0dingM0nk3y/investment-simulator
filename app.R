@@ -90,38 +90,39 @@ ui <- fluidPage(
   hr(),
   
   fluidRow(align="center",
-           column(3, #offset = 1,
+           column(4, #offset = 1,
                   inputPanel(
-                    h3("Simulation parameters"),
+                    h3("How to use this simulator"),
                     actionButton("runAnalysis", "Analyze")
                   ),
            ),
            
-           column(3, #offset = 1,
+           column(4, #offset = 1,
                   h3("1. Select Investment"),
                   textInput("symbol",
                         p("Chose one asset to invest into", br(), em("default: SPY = 'S&P500 full index'")), 
                         value = "SPY", placeholder = "any asset name supported by Yahoo Finance"),
               
                   p(em("For a guide on Stock and Index names, refer to ", 
-                   a("Yahoo Finance Symbol List", href="https://finance.yahoo.com/lookup/?guccounter=1",)
-                   )),
+                   a("Yahoo Finance Symbol List", href="https://finance.yahoo.com/lookup/?guccounter=1")),
+                  ),
+                  hr(),
+                  
+                  h3("2. Investment Amount"),
+                  numericInput("monthly_inv",
+                               "How much was invested (every MONTH)?",
+                               value = 100, min = 0, step = 100
+                   ),
             ),
            
-           column(3, #offset = 1,
-                  h3("2. Investment Start Date"),
-                  plotOutput("market", height = "150px"),
+           column(4, #offset = 1,
+                  h3("3. Investment Start Date"),
+                  plotOutput("market", height = "150px", width = "80%"),
                   uiOutput("ui_startDate"),
                   p("Investment duration:", strong(textOutput("duration", inline = T))),
                   p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
            ),
-           
-           column(3, #offset = 1,
-                  h3("3. Investment Amount"),
-                  numericInput("monthly_inv",
-                               "How much was invested (every MONTH)?",
-                               value = 100, min = 0, step = 100),
-           ),
+          
     ),
   hr(),
   
