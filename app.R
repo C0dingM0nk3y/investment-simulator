@@ -90,7 +90,7 @@ ui <- fluidPage(
   hr(),
   
   fluidRow(align="center",
-           column(4, #offset = 1,
+           column(3, #offset = 1,
                   inputPanel(
                     h3("How to use this simulator"),
                     actionButton("runAnalysis", "Analyze")
@@ -101,7 +101,8 @@ ui <- fluidPage(
                   h3("1. Select Investment"),
                   textInput("symbol",
                         p("Chose one asset to invest into", br(), em("default: SPY = 'S&P500 full index'")), 
-                        value = "SPY", placeholder = "any asset name supported by Yahoo Finance"),
+                        value = "SPY", placeholder = "any asset name supported by Yahoo Finance", 
+                        ),
               
                   p(em("For a guide on Stock and Index names, refer to ", 
                    a("Yahoo Finance Symbol List", href="https://finance.yahoo.com/lookup/?guccounter=1")),
@@ -117,7 +118,7 @@ ui <- fluidPage(
            
            column(4, #offset = 1,
                   h3("3. Investment Start Date"),
-                  plotOutput("market", height = "150px", width = "80%"),
+                  plotOutput("market", height = "150px", width = "90%"),
                   uiOutput("ui_startDate"),
                   p("Investment duration:", strong(textOutput("duration", inline = T))),
                   p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
@@ -180,20 +181,24 @@ server <- function(input, output) {
     return(df)
   }
   
-  # OUTPUT: UI (Custom Slider and Market preview)
-  output$market <- renderPlot(
+  # CREATE UI ELEMENTS and set defaults INPUTS
+  REACT <- reactiveValues() 
+  
+  # OUTPUT: UI + OUTPUT Market plot preview
+  # this runs on start-up and after every user chance of asset
+
+  observeEvent(input$symbol,
     {
-      #this only runs on start-up
-      data_full <- symbolData(input$symbol, 
-                              startdate = "1950-01-01") #recovers the earliest available data
+      REACT$data_full <- symbolData(input$symbol, 
+                                    startdate = "1950-01-01") #recovers the earliest available data
       
-      minDate <- row.names(data_full) %>% 
+      REACT$minDate <- row.names(REACT$data_full) %>% 
         as.Date() %>% min()
       
       # First, create the reactive slider UI (needed to get default input$startdate value
       output$ui_startDate <- renderUI(sliderInput(inputId = "startdate", label="Select Start Date",
-                                                  min = minDate, max=today()-366,
-                                                  value=minDate))
+                                                  min = REACT$minDate, max=today()-366,
+                                                  value=REACT$minDate))
       
       # Second, render plot
       output$market <- renderPlot({
