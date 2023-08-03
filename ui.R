@@ -90,25 +90,43 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   hr(),
   
       fluidRow(align="center",
-           column(3, #offset = 1,
-                    h3("How to use this simulator"),
-           ),
-           
-           column(4, #offset = 1,
-                  h3("1. Select Investment"),
-                  # split columns in 2 parts (to align search box to search button)
-                  p("Chose one asset to invest into", br(), em("default: SPY = 'S&P500 full index'")), 
-                  fluidRow(
-                    column(6, offset=2, textInput("symbol", label="", value = "SPY",  width = "100%",
-                                                  placeholder = "any asset name supported by Yahoo Finance"),),
-                    column(3, align="left", br(), actionButton("symbolsubmit", label = "Search", width = "100%"),
+
+               column(4, #offset = 1,
+                      h3("1. Find the tracker name on Yahoo Finance"),
+                      
+                      # split columns in 2 parts (to align search box to search button)
+                      fluidRow(
+                        column(6, offset=2, textInput("symbol", label="Yahoo Tracker Name", value = "^GSPC",  width = "100%",
+                                                  placeholder = "Symbol Name"),),
+                        column(3, align="left", br(), actionButton("symbolsubmit", label = "Search", width = "100%"),
                       ),
-                  ),
-              
-                  p(em("For a guide on Stock and Index names, refer to ", 
-                   a("Yahoo Finance Symbol List", href="https://finance.yahoo.com/lookup/?guccounter=1")),
-                  ),
-                  hr(),
+                      ),
+                      
+                      p("Use",
+                        a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
+                        "to find a list of all the supported investments"),
+                      p("Retrieve the correct",code("Symbol name"), "from Yahoo website"),
+                      hr(),
+                      strong("Examples of common investments:"), br(),
+                      #div(style="background:white; color:black; font-size:75%; width:70%",
+                      div(style="font-size:75%; width:70%",
+                        em(
+                        strong("^GSPC"), "=  S&P500 (Index)",br(),
+                        strong("^IXIC"), "=  NASDAQ (Index)",br(),
+                        strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
+                        strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
+                        strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),br(),
+                        strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
+                        strong("EEM"), "=  Emerging Markets (ETF)",br(),
+                        strong("EWI"), "=  Italian Market (ETF)",br(),br(),
+                        strong("GOOG"), "=  Google (Stock)",br(),
+                        strong("AAPL"), "=  Apple (Stock)",br(),
+                        )
+                        ),
+                  
+                      
+               ),
+               column(4, #offset = 1,
                   
                   h3("2. Investment Amount"),
                   numericInput("monthly_inv",
@@ -121,17 +139,17 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                   p(em("Purchasing power of ",
                       # textOutput(renderText(input$monthly_inv), inline = T),
                        "$ was much higher back then then it is now. Tick the box to correct for inflation."))
-            ),
-           
-           column(4, #offset = 1,
-                  h3("3. Investment Start Date"),
-                  plotOutput("market", height = "150px", width = "90%"),
-                  uiOutput("ui_startDate"),
-                  p("Investment duration:", strong(textOutput("duration", inline = T))),
-                  p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
-           ),
-           ),
-          
+                ),
+               
+               column(4, #offset = 1,
+                      h3("3. Investment Start Date"),
+                      plotOutput("market", height = "150px", width = "90%"),
+                      uiOutput("ui_startDate"),
+                      p("Investment duration:", strong(textOutput("duration", inline = T))),
+                      p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
+               ),
+      ),
+  
   hr(),
   
   fluidRow(align="center",
