@@ -54,6 +54,10 @@ server <- function(input, output) {
     REACT$minDate <- row.names(REACT$data_full) %>% 
       as.Date() %>% min()
     
+    REACT$duration <- difftime(today(), REACT$minDate, units = "weeks") %>% 
+      divide_by(52) %>%
+      floor() 
+    
     sliderInput(inputId = "startdate", label="Select Start Date",
                 min = isolate(REACT$minDate), max=today()-366,
                 value= isolate(REACT$minDate))
@@ -86,7 +90,7 @@ server <- function(input, output) {
             legend.position= "right", legend.margin = margin(0)) 
       })
   
-  # On "Submit"
+  # UPDATE ASSET ("Search")
   observeEvent(input$symbolsubmit, {
     #update datesets
     REACT$data_full <- symbolData(input$symbol,
@@ -94,16 +98,29 @@ server <- function(input, output) {
     REACT$minDate <- row.names(REACT$data_full) %>% 
       as.Date() %>% min()
     
+    REACT$duration <- difftime(today(), input$startdate, units = "weeks") %>% 
+      divide_by(52) %>%
+      floor() 
+    
     updateSliderInput(inputId = "startdate", min=REACT$minDate)
   })
   
   # OUTPUT: TEXT (Investment Duration)
   output$duration <- renderText(
-    difftime(today(), input$startdate, units = "weeks") %>% 
-      divide_by(52) %>%
-      floor() %>% 
-      paste("years")
+    REACT$duration %>% paste("years")
   )
+  
+  output$settings <- renderTable(
+    rownames = TRUE, colnames = FALSE,
+    {
+      #from inputs data
+      set_df <- data.frame(Value = input$symbol, row.names = "Investment Name")
+      set_df["Start Date", 1] <- input$startdate %>% as.Date() %>% as.character()
+      set_df["Total Duration", 1] <- REACT$duration %>% paste("years")
+      set_df["Monthly Investment", 1] <- paste0(input$monthly_inv, "$")
+      set_df["Inflation Correction", 1] <- input$infl_correction
+      set_df
+    })
   
   # SIMULATION and ANALYSIS ####
   
@@ -239,19 +256,6 @@ server <- function(input, output) {
                    })
                    
 
-                   output$settings <- renderTable(
-                     rownames = TRUE, colnames = FALSE,
-                     {
-                       #from df_start
-                       set_df <- data.frame(Value = df_start[1,"asset"], row.names = "Investment Name")
-                       #set_df <- data.frame(Value = "SPY", row.names = "Investment Name")
-                       
-                       set_df["Start Date", 1] <- df_start[1, "Date", drop=T] %>% as.Date.character()
-                       set_df["Total Duration", 1] <- duration %>% paste("Years")
-                       set_df["Monthly Investment", 1] <- paste0(start_df[1, "buy_value"], "$")
-                       set_df
-                   })
-                  
                    output$end_plot <- renderPlot(
                      {
                        #from df_last

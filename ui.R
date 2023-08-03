@@ -92,7 +92,6 @@ ui <- fluidPage(theme = shinytheme("darkly"),
       fluidRow(align="center",
            column(3, #offset = 1,
                     h3("How to use this simulator"),
-                    actionButton("runAnalysis", "Simulate")
            ),
            
            column(4, #offset = 1,
@@ -131,9 +130,27 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                   p("Investment duration:", strong(textOutput("duration", inline = T))),
                   p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
            ),
+           ),
           
-    ),
   hr(),
+  
+  fluidRow(align="center",
+           column(3, offset = 3,
+                  h3("Investment Parameters"),
+                  tableOutput("settings"),
+                  ),
+           column(2, 
+                  br(),br(),br(),br(),br(),
+                  "--", actionButton("runAnalysis", "Simulate Inv."), "->",
+                  ),
+           column(3,
+                  h3("Results"),
+                  tableOutput("endopoints"),
+           ),
+      ),
+
+  hr(),
+  
   
     fluidRow(#theme = shinytheme("darkly"),
     column(10, offset = 1,
@@ -144,8 +161,6 @@ ui <- fluidPage(theme = shinytheme("darkly"),
       plotOutput("pnl"),
       plotOutput("asset"),
       
-      tableOutput("settings"),
-      tableOutput("endopoints"),
       plotOutput("end_plot"),
       
       dataTableOutput("table"),
