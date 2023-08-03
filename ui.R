@@ -113,6 +113,12 @@ ui <- fluidPage(
                                "How much was invested (every MONTH)?",
                                value = 100, min = 0, step = 100
                    ),
+                  checkboxInput("infl_correction",
+                                "Correct for inflation?", value = FALSE
+                                ),
+                  p(em("Purchasing power of ",
+                      # textOutput(renderText(input$monthly_inv), inline = T),
+                       "$ was much higher back then then it is now. Tick the box to correct for inflation."))
             ),
            
            column(4, #offset = 1,
