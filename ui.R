@@ -97,10 +97,14 @@ ui <- fluidPage(theme = shinytheme("darkly"),
            
            column(4, #offset = 1,
                   h3("1. Select Investment"),
-                  textInput("symbol",
-                        p("Chose one asset to invest into", br(), em("default: SPY = 'S&P500 full index'")), 
-                        value = "SPY", placeholder = "any asset name supported by Yahoo Finance", 
-                        ),
+                  # split columns in 2 parts (to align search box to search button)
+                  p("Chose one asset to invest into", br(), em("default: SPY = 'S&P500 full index'")), 
+                  fluidRow(
+                    column(6, offset=2, textInput("symbol", label="", value = "SPY",  width = "100%",
+                                                  placeholder = "any asset name supported by Yahoo Finance"),),
+                    column(3, align="left", br(), actionButton("newsymbol", label = "Search", width = "100%"),
+                      ),
+                  ),
               
                   p(em("For a guide on Stock and Index names, refer to ", 
                    a("Yahoo Finance Symbol List", href="https://finance.yahoo.com/lookup/?guccounter=1")),
