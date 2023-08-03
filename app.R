@@ -207,7 +207,7 @@ server <- function(input, output) {
   output$market <- renderPlot({
     ggplot(data = REACT$data_full) +
       geom_line(aes(x=Date, y=Price_AVG)) +
-      geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", size =0.9) +
+      geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", linewidth =0.9) +
       annotate(geom="label", 
                label="Inv. Start", hjust=0, fill="lightblue",
                x=as.POSIXct(input$startdate+180), y=max(REACT$data_full$Price_AVG)*0.9) +
@@ -224,54 +224,71 @@ server <- function(input, output) {
   )
   
   
-  simulateInv <- function(symbol, startdate, inv_qnt){
+  DCA_simulate <- function(symbol, startdate, inv_qnt){
     
     # RE-IMPORT asset data, starting from start date #FUTURE: this may be a filter set on REACT$data_full
     df <- symbolData(symbol, startdate)
     
-    # CREATE SUBSET: 1 INVESTMENT EVERY 30 days
+    # CREATE SUBSET: 1x BUY EVERY 30 days
     
     #> Starting from startdate, subset table to only show prices on the days where a new investment was done.
-    #> NB: market is closed on SAT-SUN. Therefore the market data are missing all the rows corresponging to holidays.
+    #> NB: market is closed on SAT-SUN. Therefore the market data are missing all the rows corresponding to holidays.
     #> For this reason, 1 investment every 30 days is converted into 1 investment every 20 work-days.
     #> Table is filtered so to only keep one row every 20, starting from startdate
     
-    df[,"daysFromStart"] <- 1:nrow(df)-1
-    df[,"filter"] <- ifelse(df$daysFromStart %% 20 ==0, TRUE, FALSE)
+    df[,"wDaysFromStart"] <- 1:nrow(df)-1 #workdays count
+    df[,"filter"] <- ifelse(df$wDaysFromStart %% 20 ==0, TRUE, FALSE)
     
-    ss <- subset(df, filter == TRUE, select = c("Date","Price_AVG", "Adjusted", "daysFromStart"))
+    ss <- subset(df, filter == TRUE, select = c("Date","Price_AVG", "Adjusted", "wDaysFromStart"))
     
     # SIMULATE PURCHASE
-    ss[,"value_inv"] <- inv_qnt
-    ss[,"buy_qnt"] <- with(ss, value_inv/Price_AVG)
-    
-    # cumulative calc
-    ss[,"cum_inv"] <- cumsum(ss$value_inv)
-    ss[,"cum_qnt"] <- cumsum(ss$buy_qnt)
-    
-    # current value of investment
-    latestPrice <- tail(df$Price_AVG, 1)
-    ss[,"cum_value"] <- ss$cum_qnt*latestPrice
-    ss[,"cum_valueAtTime"] <- with(ss, cum_qnt*Price_AVG)
-    
-    # ROI
-    ss[,"ratioTEMP"] <- with(ss, cum_value/cum_inv)
-    ss[,"ROI"] <- with(ss, (cum_value-cum_inv)/cum_inv)
-    
-    # STOPPED HERE
-    time <- difftime(tail(row.names(df), 1), head(row.names(df), 1), units = "weeks") %>%
-      as.numeric()/52 
-    finalRatio <- tail(ss$ratioTEMP, 1)
-    
-    #ADJCALC
-    ss[,"buy_adj"] <- with(ss, value_inv/Adjusted)
-    ss[,"cum_adj"] <- cumsum(ss$buy_adj)
-    ss[,"cum_adjVal"] <- ss$cum_adj*latestPrice
-    ss[,"ROI_adj"] <- with(ss, (cum_adjVal-cum_inv)/cum_inv)
-    ss[,"ratioTEMP_Adj"] <- with(ss, cum_adjVal/cum_inv)
+    ss[,"buy_value"] <- inv_qnt
+    ss[,"buy_qnt"] <- with(ss, buy_value/Price_AVG)
     
     # ORGANIZE RESULTS
     res <- ss
+    
+    return(res)
+  }
+  
+  # summarize DCA simulated data BY YEAR
+  DCA_summary <- function(df){
+    df[,"Year"] <- year(df$Date)
+    
+    sum_df <- df %>% 
+      group_by(Year) %>%
+      summarise(buy_value = sum(buy_value),
+                buy_qnt  = sum(buy_qnt),
+                Price_AVG = mean(Price_AVG),
+                Adjusted = mean(Adjusted),
+                )
+    
+    # cumulative calc
+    sum_df[,"cum_inv"] <- cumsum(sum_df$buy_value)
+    sum_df[,"cum_qnt"] <- cumsum(sum_df$buy_qnt)
+    
+    # current value of investment
+    latestPrice <- tail(sum_df$Price_AVG, 1)
+    sum_df[,"cum_value"] <- sum_df$cum_qnt*latestPrice
+    sum_df[,"cum_valueAtTime"] <- with(sum_df, cum_qnt*Price_AVG)
+    
+    # ROI
+    sum_df[,"ratioTEMP"] <- with(sum_df, cum_value/cum_inv)
+    sum_df[,"ROI"] <- with(sum_df, (cum_value-cum_inv)/cum_inv)
+    
+    # STOPPED HERE
+    time_Y <- tail(sum_df$Year, 1) - head(sum_df$Year, 1)
+    finalRatio <- tail(sum_df$ratioTEMP, 1)
+    
+    #ADJCALC
+    sum_df[,"buy_adj"] <- with(sum_df, buy_value/Adjusted)
+    sum_df[,"cum_adj"] <- cumsum(sum_df$buy_adj)
+    sum_df[,"cum_adjVal"] <- sum_df$cum_adj*latestPrice
+    sum_df[,"ROI_adj"] <- with(sum_df, (cum_adjVal-cum_inv)/cum_inv)
+    sum_df[,"ratioTEMP_Adj"] <- with(sum_df, cum_adjVal/cum_inv)
+    
+    # ORGANIZE RESULTS
+    res <- sum_df
     
     return(res)
   }
@@ -280,21 +297,23 @@ server <- function(input, output) {
   observeEvent(input$runAnalysis,
                  {
                    #isolate variable to avoid constant refreshing while user set parameters
-                   REACT$simulation <- simulateInv(isolate(input$symbol), 
+                   REACT$simulation <- DCA_simulate(isolate(input$symbol), 
                                                    isolate(input$startdate), 
                                                    isolate(input$monthly_inv))
                    
+                   REACT$summary <- DCA_summary(REACT$simulation)
+                   
                    output$plot <- renderPlot(
-                     REACT$simulation %>% 
+                     REACT$summary %>% 
                        ggplot() +
-                       geom_line(aes(x=Date, y=cum_inv)) +
-                       geom_line(aes(x=Date, y=cum_value)) +
-                       geom_line(aes(x=Date, y=cum_valueAtTime, color="red")) +
+                       geom_line(aes(x=Year, y=cum_inv)) +
+                       geom_line(aes(x=Year, y=cum_value)) +
+                       geom_line(aes(x=Year, y=cum_valueAtTime, color="red")) +
                        theme_light()
                    )
                    
                    output$table <- renderDataTable(
-                     REACT$simulation
+                     REACT$summary
                    )
                  }
   )
