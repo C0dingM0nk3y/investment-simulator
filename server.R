@@ -46,18 +46,13 @@ server <- function(input, output) {
   # OUTPUT: UI + OUTPUT Market plot preview
   # this runs on start-up and after every user chance of asset
   
-  data.update <- reactive(
-    {
-      REACT$data_full <- symbolData(isolate(input$symbol), #prevent automatic refresh while user is typing
-                                    startdate = "1950-01-01") #recovers the earliest available data
-      REACT$minDate <- row.names(REACT$data_full) %>% 
-        as.Date() %>% min()
-    }
-  )
-  
   # First, create the reactive slider UI (needed to get default input$startdate value
   output$ui_startDate <- renderUI({
-    data.update() #reactive expression. Only runs if one of param has changed
+    # only runs of first iteration. LAter refresh require to hit "SUBMIT"
+    REACT$data_full <- symbolData(isolate(input$symbol), #prevent automatic refresh while user is typing
+                                  startdate = "1950-01-01") #recovers the earliest available data
+    REACT$minDate <- row.names(REACT$data_full) %>% 
+      as.Date() %>% min()
     
     sliderInput(inputId = "startdate", label="Select Start Date",
                 min = isolate(REACT$minDate), max=today()-366,
@@ -93,6 +88,7 @@ server <- function(input, output) {
   
   # On "Submit"
   observeEvent(input$symbolsubmit, {
+    #update datesets
     REACT$data_full <- symbolData(input$symbol,
                                   startdate = "1950-01-01") #recovers the earliest available data
     REACT$minDate <- row.names(REACT$data_full) %>% 
@@ -100,7 +96,6 @@ server <- function(input, output) {
     
     updateSliderInput(inputId = "startdate", min=REACT$minDate)
   })
-  
   
   # OUTPUT: TEXT (Investment Duration)
   output$duration <- renderText(
@@ -110,7 +105,7 @@ server <- function(input, output) {
       paste("years")
   )
   
-  # OUTPUT and ANALYSIS ####
+  # SIMULATION and ANALYSIS ####
   
   DCA_simulate <- function(symbol, startdate, inv_qnt){
     
