@@ -11,10 +11,7 @@ library(ggplot2)
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
-  #USES DEFAULT INPUTS TO BUILD UI
-  #symbol <- "SPY"
-  #startdate <- "1980-01-01" %>% as.Date()
-  #inv_qnt <- 100
+  # BUILD UI using DEFAULT/USER DATA ####
   
   # OUTPUT: PLOT Market trends
   symbolData <- function(symbol, startdate){
@@ -37,6 +34,8 @@ server <- function(input, output) {
     
     # ADD Posit Column (for plotting purposes)
     df[,"Date"] <- row.names(df) %>% as.POSIXct()
+    # ADD asset name
+    df[,"asset"] <- symbol
     
     return(df)
   }
@@ -74,11 +73,19 @@ server <- function(input, output) {
     ggplot(data) +
       geom_line(aes(x=Date, y=Price, color=PriceMethod)) +
       geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="cornflowerblue", linewidth =0.9) +
+      ggtitle(head(data$asset,1)) + #name is taken from DF, not from inputs
       scale_color_manual(values = c("Price_AVG" = "black", "Price_Adj" = "brown1")) + 
       annotate(geom="label", 
-               label="Inv. Start", hjust=0, fill="cornflowerblue", color="white",
-               x=as.POSIXct(input$startdate+180), y=max(REACT$data_full$Price_AVG)*0.9) +
-      theme_light()
+               label=paste("Start:",input$startdate), 
+               hjust=0, fill="cornflowerblue", color="white",
+               x=as.POSIXct(input$startdate+180), y=max(data$Price)*0.9) +
+      theme_classic(base_size = 12) +
+      theme(axis.title.x = element_blank(), legend.title = element_blank(), 
+            plot.title=element_text(hjust=0.5, size = 16), #center(50%) and size of title
+            #plot.title=element_text(size = 16), #center(40%) and bold title
+            plot.margin = margin(c(10,10,10,15)),
+            #legend.position= c(0.9, 0.25)) 
+            legend.position= "right", legend.margin = margin(0)) 
       })
   
   # OUTPUT: TEXT (Investment Duration)
@@ -88,6 +95,8 @@ server <- function(input, output) {
       floor() %>% 
       paste("years")
   )
+  
+  # OUTPUT and ANALYSIS ####
   
   DCA_simulate <- function(symbol, startdate, inv_qnt){
     
@@ -178,10 +187,13 @@ server <- function(input, output) {
                      floor() %>% as.numeric()
                    
                    
-                   #tidy-up dataframe for ggplot compatibility
+                   # additional df required by some plots
                    tidy_df <- pivot_longer(REACT$summary, 
                                            cols=starts_with("cum_"), values_to = "Value",
                                            names_to = "CumulData", names_prefix = "cum_") 
+                   
+                   df_start <- REACT$simul %>% head(1) #Start data
+                   df_last <- REACT$summary %>% tail(1) #Summary end data
                    
                    output$plot <- renderPlot(
                      tidy_df %>% 
@@ -222,30 +234,39 @@ server <- function(input, output) {
                      rownames = TRUE, colnames = FALSE,
                      {
                        #from df_start
-                       df_start <- REACT$simul %>% head(1) #Start data
+                       set_df <- data.frame(Value = df_start[1,"asset"], row.names = "Investment Name")
+                       #set_df <- data.frame(Value = "SPY", row.names = "Investment Name")
                        
-                       end_df <- data.frame(Value = df_start[1,"asset"], row.names = "Investment Name")
-                       #end_df <- data.frame(Value = "SPY", row.names = "Investment Name")
-                       
-                       end_df["Start Date", 1] <- df_start[1, "Date", drop=T] %>% as.Date.character()
-                       end_df["Total Duration", 1] <- duration %>% paste("Years")
-                       end_df["Monthly Investment", 1] <- paste0(start_df[1, "buy_value"], "$")
-                       end_df
+                       set_df["Start Date", 1] <- df_start[1, "Date", drop=T] %>% as.Date.character()
+                       set_df["Total Duration", 1] <- duration %>% paste("Years")
+                       set_df["Monthly Investment", 1] <- paste0(start_df[1, "buy_value"], "$")
+                       set_df
                    })
                   
-                   output$endopoints <- renderTable(
-                     rownames = TRUE, colnames = FALSE,
+                   output$end_plot <- renderPlot(
                      {
                        #from df_last
-                       df_last <- REACT$summary %>% tail(1) #Summary end data
-                       
                        end_df <- data.frame()
                        end_df["Total Invested ($)", 1] <- df_last[1, "cum_Invested", drop=T]
                        end_df["Total Value ($)", 1] <- df_last[1, "cum_Value"]
                        end_df["Total Return ($)", 1] <-df_last[1, "PNL"]
                        end_df["Total Return (%)", 1] <-df_last[1, "ROI%"]*100
                        end_df["Yearly Return (%)", 1] <- 100*df_last[1, "ROI%", drop=T]/duration
-                       end_df
+                       
+                       output$endopoints <- renderTable( #render table
+                         rownames = TRUE, colnames = FALSE,
+                         end_df) 
+                       
+                       end_plot <- data.frame(
+                         Total = factor(c("Invested", "Value", "Returns"), 
+                                        levels = c("Invested", "Value", "Returns")), #to ensure correct order in plot legend
+                         Value = end_df[1:3, 1]
+                       ) 
+                       
+                       ggplot(end_plot) +
+                         geom_col(aes(x=Total, y=Value, fill=Total)) +
+                         #scale_fill_manual(values = c("Invested" = "black", "Value" = "blue", "Returns" = "green")) + 
+                         theme_light()
                    })
                    
                    output$table <- renderDataTable(

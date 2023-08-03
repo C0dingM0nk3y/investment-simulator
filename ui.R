@@ -91,10 +91,8 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   
       fluidRow(align="center",
            column(3, #offset = 1,
-                  inputPanel(
                     h3("How to use this simulator"),
                     actionButton("runAnalysis", "Simulate")
-                  ),
            ),
            
            column(4, #offset = 1,
@@ -144,6 +142,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
       
       tableOutput("settings"),
       tableOutput("endopoints"),
+      plotOutput("end_plot"),
       
       dataTableOutput("table"),
     ),
