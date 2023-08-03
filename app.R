@@ -11,6 +11,7 @@ library(shiny)
 library(quantmod)
 library(magrittr)
 library(dplyr)
+library(tidyr)
 library(stringr)
 library(lubridate)
 library(ggplot2)
@@ -44,7 +45,7 @@ ui <- fluidPage(
   
   # NAVBAR ####
   navbarPage(
-    title = "Select one tool:",
+    title = "Select one Investment Strategy:",
     
     # DCA SIMULATOR ####
     tabPanel(title=strong("DCA simulator"),
@@ -84,8 +85,6 @@ ui <- fluidPage(
              ),
              
              ),
-  ),
-  ),
   
   hr(),
   
@@ -131,10 +130,23 @@ ui <- fluidPage(
     column(10, offset = 1,
       h1("some nice plot!"),
       plotOutput("plot"),
+      plotOutput("hist"),
       dataTableOutput("table"),
     ),
   ),
-
+  ),
+  
+  # REBAL SIMULATOR ####
+  tabPanel(title=strong("Rebalancing Simulator"),
+           fluidRow(align="center",
+                    column(12,
+                          h2("[COMING SOON]"),
+                           ),
+                    ),
+  ),
+  ),
+  
+  
   hr(),
   
   fluidRow(
@@ -306,11 +318,24 @@ server <- function(input, output) {
                    output$plot <- renderPlot(
                      REACT$summary %>% 
                        ggplot() +
-                       geom_line(aes(x=Year, y=cum_inv)) +
-                       geom_line(aes(x=Year, y=cum_value)) +
-                       geom_line(aes(x=Year, y=cum_valueAtTime, color="red")) +
+                       geom_line(aes(x=Year, y=cum_inv, color="inv")) +
+                       geom_line(aes(x=Year, y=cum_value, color="value")) +
+                       geom_line(aes(x=Year, y=cum_valueAtTime, color="valueAtTime")) +
                        theme_light()
                    )
+                   
+                   output$hist <- renderPlot(
+                     REACT$summary %>% 
+                       pivot_longer(cols=starts_with("cum_"), 
+                                    names_to = "CumulativeData", names_prefix = "cum_", values_to = "Value"
+                                    ) %>%
+                       subset(!(CumulativeData == "qnt")) %>% #removes qnt
+                       
+                       ggplot() +
+                       geom_col(aes(x=Year, y=Value, fill=CumulativeData), position=position_dodge()) +
+                       theme_light()
+                   )
+                   
                    
                    output$table <- renderDataTable(
                      REACT$summary
