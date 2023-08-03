@@ -92,7 +92,7 @@ ui <- fluidPage(
            column(3, #offset = 1,
                   inputPanel(
                     h3("How to use this simulator"),
-                    actionButton("runAnalysis", "Analyze")
+                    actionButton("runAnalysis", "Simulate")
                   ),
            ),
            
@@ -132,6 +132,7 @@ ui <- fluidPage(
       plotOutput("plot"),
       plotOutput("hist"),
       plotOutput("pnl"),
+      plotOutput("asset"),
       tableOutput("settings"),
       tableOutput("endopoints"),
       dataTableOutput("table"),

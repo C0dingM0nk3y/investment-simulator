@@ -195,6 +195,15 @@ server <- function(input, output) {
                        theme_light()
                    })
                    
+                   output$asset <- renderPlot({
+                     asset <- REACT$summary
+                     
+                     asset %>% 
+                       ggplot() +
+                       geom_col(aes(x=Year, y=buy_qnt), position=position_dodge()) +
+                       theme_light()
+                   })
+                   
 
                    output$settings <- renderTable(
                      rownames = TRUE, colnames = FALSE,
