@@ -132,6 +132,7 @@ ui <- fluidPage(
       plotOutput("plot"),
       plotOutput("hist"),
       plotOutput("pnl"),
+      tableOutput("endopoints"),
       dataTableOutput("table"),
     ),
   ),

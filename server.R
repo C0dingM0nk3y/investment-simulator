@@ -101,6 +101,7 @@ server <- function(input, output) {
     # SIMULATE PURCHASE
     ss[,"buy_value"] <- inv_qnt
     ss[,"buy_qnt"] <- with(ss, buy_value/Price_AVG)
+    ss[,"asset"] <- symbol
     
     # ORGANIZE RESULTS
     res <- ss
@@ -150,11 +151,19 @@ server <- function(input, output) {
   observeEvent(input$runAnalysis,
                  {
                    #isolate variable to avoid constant refreshing while user set parameters
-                   REACT$simulation <- DCA_simulate(isolate(input$symbol), 
+                   REACT$simul <- DCA_simulate(isolate(input$symbol), 
                                                    isolate(input$startdate), 
                                                    isolate(input$monthly_inv))
                    
-                   REACT$summary <- DCA_summary(REACT$simulation)
+                   REACT$summary <- DCA_summary(REACT$simul)
+                   
+                   # used by different plots
+                   duration <- difftime(REACT$simul$Date %>% tail(1), 
+                                        REACT$simul$Date %>% head(1),
+                                        units = "weeks") %>% 
+                     divide_by(52) %>%
+                     floor() %>% as.numeric()
+                   
                    
                    #tidy-up dataframe for ggplot compatibility
                    tidy_df <- pivot_longer(REACT$summary, 
@@ -186,9 +195,33 @@ server <- function(input, output) {
                        theme_light()
                    })
                    
+
+                   output$endopoints <- renderTable({
+                     
+                     #from df_start
+                     df_start <- REACT$simul %>% head(1) #Start data
+                     end_df <- data.frame(Value = df_start[1,"asset"], row.names = "Investment Name")
+                     #end_df <- data.frame(Value = "SPY", row.names = "Investment Name")
+                     
+                     end_df["Start Date", 1] <- as.character(df_start[1, "Date"]) 
+                     end_df["Total Duration", 1] <- duration %>% paste("Years")
+                     end_df["Monthly Investment", 1] <- paste0(start_df[1, "buy_value"], "$")
+                     
+                     #from df_last
+                     df_last <- REACT$summary %>% tail(1) #Summary end data
+                     
+                     end_df["Total Invested", 1] <- paste0(df_last[1, "cum_Invested"], "$")
+                     end_df["Total Value", 1] <- paste0(df_last[1, "cum_Value"], "$")
+                     end_df["Total Return", 1] <- paste0(df_last[1, "PNL"], "$")
+                     end_df["Total Return (%)", 1] <- paste0(df_last[1, "ROI%"]*100, "%")
+                     end_df["Yearly Return (%)", 1] <- paste0(100*df_last[1, "ROI%", drop=T]/duration, "%")
+                     end_df
+                   })
+                   
                    output$table <- renderDataTable(
                      REACT$summary
                    )
+                   
                  }
   )
   
