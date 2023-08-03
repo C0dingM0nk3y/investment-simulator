@@ -131,6 +131,7 @@ ui <- fluidPage(
       h1("some nice plot!"),
       plotOutput("plot"),
       plotOutput("hist"),
+      plotOutput("pnl"),
       dataTableOutput("table"),
     ),
   ),

@@ -175,6 +175,16 @@ server <- function(input, output) {
                        theme_light()
                    )
                    
+                   output$pnl <- renderPlot({
+                     pnl <- REACT$summary
+                     pnl[,"is.profit"] <- ifelse(pnl$PNL >= 0, "Profit", "Loss")
+                     
+                     pnl %>% 
+                       ggplot() +
+                       geom_col(aes(x=Year, y=PNL, fill=is.profit), position=position_dodge()) +
+                       scale_fill_manual(values = list("Profit" = "springgreen3", "Loss" = "brown1"), ) + 
+                       theme_light()
+                   })
                    
                    output$table <- renderDataTable(
                      REACT$summary
