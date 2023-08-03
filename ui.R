@@ -91,8 +91,8 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   
       fluidRow(align="center",
 
-               column(5, #offset = 1,
-                      h3("1. Find tracker name on Yahoo Finance"),
+               column(4, #offset = 1,
+                      h3("1. Find Yahoo Finance tracker"),
                       
                       # split columns in 2 parts (to align search box to search button)
                       fluidRow(
@@ -154,12 +154,14 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                       
                 ),
                
-               column(3, #offset = 1,
+               column(4, #offset = 1,
                       h3("4. Start Simulation"),
                       #h4("Investment Parameters"),
                       tableOutput("settings"),
-                      actionButton("runAnalysis", "Results/Refresh"),
-                      h4("Results"),
+                      hr(),
+                      actionButton("runAnalysis", strong("Results/Refresh")),
+                      hr(),
+                      #h4("Results"),
                       tableOutput("endopoints"),
                ),
       ),

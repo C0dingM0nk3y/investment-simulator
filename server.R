@@ -48,7 +48,7 @@ server <- function(input, output) {
   
   # First, create the reactive slider UI (needed to get default input$startdate value
   output$ui_startDate <- renderUI({
-    # only runs of first iteration. LAter refresh require to hit "SUBMIT"
+    # only runs of first iteration. Later refresh require to hit "SUBMIT"
     REACT$data_full <- symbolData(isolate(input$symbol), #prevent automatic refresh while user is typing
                                   startdate = "1950-01-01") #recovers the earliest available data
     REACT$minDate <- row.names(REACT$data_full) %>% 
@@ -104,6 +104,13 @@ server <- function(input, output) {
     
     updateSliderInput(inputId = "startdate", min=REACT$minDate)
   })
+  
+  # UPDATE duration
+  observeEvent(input$startdate,
+               REACT$duration <- difftime(today(), input$startdate, units = "weeks") %>% 
+                 divide_by(52) %>%
+                 floor() 
+  )
   
   # OUTPUT: TEXT (Investment Duration)
   output$duration <- renderText(
