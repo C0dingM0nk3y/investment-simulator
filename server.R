@@ -64,22 +64,21 @@ server <- function(input, output) {
   # Second, render plot
   output$market <- renderPlot({
     data <-  REACT$data_full %>%
-      pivot_longer(cols = starts_with("Price_"), names_to = "PriceCalc", values_to = "Price")
+      pivot_longer(cols = starts_with("Price_"), names_to = "PriceMethod", values_to = "Price")
     
     # Hide Price_Adj until user ticks the box 
     if (input$infl_correction == FALSE){
-      data %<>% subset(!(PriceCalc=="Price_Adj"))}
+      data %<>% subset(!(PriceMethod=="Price_Adj"))}
       
     ggplot(data) +
-      geom_line(aes(x=Date, y=Price, color=PriceCalc)) +
+      geom_line(aes(x=Date, y=Price, color=PriceMethod)) +
       geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", linewidth =0.9) +
-      scale_color_manual(values = c("Price_AVG" = "gray", "Price_Adj" = "brown1")) + 
+      scale_color_manual(values = c("Price_AVG" = "black", "Price_Adj" = "brown1")) + 
       annotate(geom="label", 
                label="Inv. Start", hjust=0, fill="lightblue",
                x=as.POSIXct(input$startdate+180), y=max(REACT$data_full$Price_AVG)*0.9) +
       theme_light()
       })
-  
   
   # OUTPUT: TEXT (Investment Duration)
   output$duration <- renderText(
@@ -89,10 +88,9 @@ server <- function(input, output) {
       paste("years")
   )
   
-  
   DCA_simulate <- function(symbol, startdate, inv_qnt){
     
-    # RE-IMPORT asset data, starting from start date #FUTURE: this may be a filter set on REACT$data_full
+    # RE-IMPORT asset data, starting from start date #NOTE FOR FUTURE: this may be a filter set on REACT$data_full
     df <- symbolData(symbol, startdate)
     
     # CREATE SUBSET: 1x BUY EVERY 30 days
@@ -105,11 +103,15 @@ server <- function(input, output) {
     df[,"wDaysFromStart"] <- 1:nrow(df)-1 #workdays count
     df[,"filter"] <- ifelse(df$wDaysFromStart %% 20 ==0, TRUE, FALSE)
     
-    ss <- subset(df, filter == TRUE, select = c("Date","Price_AVG", "Adjusted", "wDaysFromStart"))
+    ss <- subset(df, filter == TRUE,
+                 select = c("Date","Price_AVG", "Price_Adj", "wDaysFromStart"))
     
+    # PIVOT for PRICE METHOD
+    ss %<>% pivot_longer(cols = starts_with("Price_"), names_to = "PriceMethod", values_to = "Price")
+      
     # SIMULATE PURCHASE
     ss[,"buy_value"] <- inv_qnt
-    ss[,"buy_qnt"] <- with(ss, buy_value/Price_AVG)
+    ss[,"buy_qnt"] <- with(ss, buy_value/Price) #Price_AVG/Price_Adj
     ss[,"asset"] <- symbol
     
     # ORGANIZE RESULTS
@@ -119,28 +121,29 @@ server <- function(input, output) {
   }
   
   # summarize DCA simulated data BY YEAR
-  DCA_summary <- function(df){
-    df[,"Year"] <- year(df$Date)
+  DCA_summary <- function(df, infl_correction = FALSE){
+    df[,"Year"] <- year(df$Date) #variable for summary
+    
+    # filter for Price_AVG or Price_Adj
+    if (infl_correction == TRUE){
+      df %<>% subset(PriceMethod == "Price_Adj")}
+    else{
+      df %<>% subset(PriceMethod == "Price_AVG")}
     
     sum_df <- df %>% 
       group_by(Year) %>%
       summarise(buy_value = sum(buy_value),
                 buy_qnt  = sum(buy_qnt),
-                Price_AVG = mean(Price_AVG),
-                Adjusted = mean(Adjusted),
+                Price = mean(Price),
                 )
     
     # cumulative calc
     sum_df[,"cum_Invested"] <- cumsum(sum_df$buy_value)
     sum_df[,"tot_Owned"] <- cumsum(sum_df$buy_qnt)
     
-    # Value of investment (according to price back then)
-    #latestPrice <- tail(sum_df$Price_AVG, 1)
-    #sum_df[,"cum_Value"] <- sum_df$tot_Owned*latestPrice
-    sum_df[,"cum_Value"] <- with(sum_df, tot_Owned*Price_AVG)
+    sum_df[,"cum_Value"] <- with(sum_df, tot_Owned*Price)
     
     # ROI
-    #sum_df[,"ratioTEMP"] <- with(sum_df, cum_Value/cum_Invested)
     sum_df[,"PNL"] <- with(sum_df, cum_Value-cum_Invested)
     sum_df[,"ROI%"] <- with(sum_df, PNL/cum_Invested)
     
@@ -164,7 +167,7 @@ server <- function(input, output) {
                                                    isolate(input$startdate), 
                                                    isolate(input$monthly_inv))
                    
-                   REACT$summary <- DCA_summary(REACT$simul)
+                   REACT$summary <- DCA_summary(REACT$simul, input$infl_correction)
                    
                    # used by different plots
                    duration <- difftime(REACT$simul$Date %>% tail(1), 
@@ -223,7 +226,7 @@ server <- function(input, output) {
                        end_df <- data.frame(Value = df_start[1,"asset"], row.names = "Investment Name")
                        #end_df <- data.frame(Value = "SPY", row.names = "Investment Name")
                        
-                       end_df["Start Date", 1] <- as.character(df_start[1, "Date"]) 
+                       end_df["Start Date", 1] <- df_start[1, "Date", drop=T] %>% as.Date.character()
                        end_df["Total Duration", 1] <- duration %>% paste("Years")
                        end_df["Monthly Investment", 1] <- paste0(start_df[1, "buy_value"], "$")
                        end_df
