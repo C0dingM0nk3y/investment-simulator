@@ -91,14 +91,15 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   
       fluidRow(align="center",
 
-               column(4, #offset = 1,
-                      h3("1. Find the tracker name on Yahoo Finance"),
+               column(5, #offset = 1,
+                      h3("1. Find tracker name on Yahoo Finance"),
                       
                       # split columns in 2 parts (to align search box to search button)
                       fluidRow(
-                        column(6, offset=2, textInput("symbol", label="Yahoo Tracker Name", value = "^GSPC",  width = "100%",
+                        column(6, offset=2, textInput("symbol", label="Yahoo Tracker Name", value = "SPY",  width = "100%",
                                                   placeholder = "Symbol Name"),),
-                        column(3, align="left", br(), actionButton("symbolsubmit", label = "Search", width = "100%"),
+                        column(3, align="left", br(), #h3() is empty, as spacer 
+                               actionButton("symbolsubmit", label = "Search", width = "100%"),
                       ),
                       ),
                       
@@ -116,6 +117,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                         strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
                         strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
                         strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),br(),
+                        strong("SPY"), "=  S&P500 Index Tracker (ETF)",br(),
                         strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
                         strong("EEM"), "=  Emerging Markets (ETF)",br(),
                         strong("EWI"), "=  Italian Market (ETF)",br(),br(),
@@ -128,43 +130,38 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                ),
                column(4, #offset = 1,
                   
-                  h3("2. Investment Amount"),
-                  numericInput("monthly_inv",
-                               "How much was invested (every MONTH)?",
-                               value = 100, min = 0, step = 100
-                   ),
-                  checkboxInput("infl_correction",
-                                "Correct for inflation?", value = FALSE
-                                ),
-                  p(em("Purchasing power of ",
-                      # textOutput(renderText(input$monthly_inv), inline = T),
-                       "$ was much higher back then then it is now. Tick the box to correct for inflation."))
-                ),
-               
-               column(4, #offset = 1,
-                      h3("3. Investment Start Date"),
+                      h3("2. Investment Start Date"),
                       plotOutput("market", height = "150px", width = "90%"),
                       uiOutput("ui_startDate"),
                       p("Investment duration:", strong(textOutput("duration", inline = T))),
-                      p(em("you do not know from which date to start? Try today, 10 years ago. Or your 25th birthday.")),
+                      hr(),
+                      
+                      # split columns in 2 parts (to align search box to search button)
+                      h3("3. Investment Amount"),
+                      fluidRow(
+                        column(6, 
+                               numericInput("monthly_inv",
+                                            "Monthly Investment:",
+                                            value = 100, min = 0, step = 100),
+                               checkboxInput("infl_correction",
+                                             span("Correct for inflation?*", style="color:orange"), value = FALSE),
+                               ),
+                        column(6, align="left", br(), 
+                               p(style="color:orange", br(),
+                                 em("*Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation."))
+                        ),
+                      ),
+                      
+                ),
+               
+               column(3, #offset = 1,
+                      h3("4. Start Simulation"),
+                      #h4("Investment Parameters"),
+                      tableOutput("settings"),
+                      actionButton("runAnalysis", "Results/Refresh"),
+                      h4("Results"),
+                      tableOutput("endopoints"),
                ),
-      ),
-  
-  hr(),
-  
-  fluidRow(align="center",
-           column(3, offset = 3,
-                  h3("Investment Parameters"),
-                  tableOutput("settings"),
-                  ),
-           column(2, 
-                  br(),br(),br(),br(),br(),
-                  "--", actionButton("runAnalysis", "Simulate Inv."), "->",
-                  ),
-           column(3,
-                  h3("Results"),
-                  tableOutput("endopoints"),
-           ),
       ),
 
   hr(),
