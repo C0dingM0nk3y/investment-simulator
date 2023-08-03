@@ -196,26 +196,34 @@ server <- function(input, output) {
                    })
                    
 
-                   output$endopoints <- renderTable({
-                     
-                     #from df_start
-                     df_start <- REACT$simul %>% head(1) #Start data
-                     end_df <- data.frame(Value = df_start[1,"asset"], row.names = "Investment Name")
-                     #end_df <- data.frame(Value = "SPY", row.names = "Investment Name")
-                     
-                     end_df["Start Date", 1] <- as.character(df_start[1, "Date"]) 
-                     end_df["Total Duration", 1] <- duration %>% paste("Years")
-                     end_df["Monthly Investment", 1] <- paste0(start_df[1, "buy_value"], "$")
-                     
-                     #from df_last
-                     df_last <- REACT$summary %>% tail(1) #Summary end data
-                     
-                     end_df["Total Invested", 1] <- paste0(df_last[1, "cum_Invested"], "$")
-                     end_df["Total Value", 1] <- paste0(df_last[1, "cum_Value"], "$")
-                     end_df["Total Return", 1] <- paste0(df_last[1, "PNL"], "$")
-                     end_df["Total Return (%)", 1] <- paste0(df_last[1, "ROI%"]*100, "%")
-                     end_df["Yearly Return (%)", 1] <- paste0(100*df_last[1, "ROI%", drop=T]/duration, "%")
-                     end_df
+                   output$settings <- renderTable(
+                     rownames = TRUE, colnames = FALSE,
+                     {
+                       #from df_start
+                       df_start <- REACT$simul %>% head(1) #Start data
+                       
+                       end_df <- data.frame(Value = df_start[1,"asset"], row.names = "Investment Name")
+                       #end_df <- data.frame(Value = "SPY", row.names = "Investment Name")
+                       
+                       end_df["Start Date", 1] <- as.character(df_start[1, "Date"]) 
+                       end_df["Total Duration", 1] <- duration %>% paste("Years")
+                       end_df["Monthly Investment", 1] <- paste0(start_df[1, "buy_value"], "$")
+                       end_df
+                   })
+                  
+                   output$endopoints <- renderTable(
+                     rownames = TRUE, colnames = FALSE,
+                     {
+                       #from df_last
+                       df_last <- REACT$summary %>% tail(1) #Summary end data
+                       
+                       end_df <- data.frame()
+                       end_df["Total Invested ($)", 1] <- df_last[1, "cum_Invested", drop=T]
+                       end_df["Total Value ($)", 1] <- df_last[1, "cum_Value"]
+                       end_df["Total Return ($)", 1] <-df_last[1, "PNL"]
+                       end_df["Total Return (%)", 1] <-df_last[1, "ROI%"]*100
+                       end_df["Yearly Return (%)", 1] <- 100*df_last[1, "ROI%", drop=T]/duration
+                       end_df
                    })
                    
                    output$table <- renderDataTable(
