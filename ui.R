@@ -102,7 +102,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                   fluidRow(
                     column(6, offset=2, textInput("symbol", label="", value = "SPY",  width = "100%",
                                                   placeholder = "any asset name supported by Yahoo Finance"),),
-                    column(3, align="left", br(), actionButton("newsymbol", label = "Search", width = "100%"),
+                    column(3, align="left", br(), actionButton("symbolsubmit", label = "Search", width = "100%"),
                       ),
                   ),
               
