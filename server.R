@@ -121,28 +121,24 @@ server <- function(input, output) {
                 )
     
     # cumulative calc
-    sum_df[,"cum_inv"] <- cumsum(sum_df$buy_value)
-    sum_df[,"cum_qnt"] <- cumsum(sum_df$buy_qnt)
+    sum_df[,"cum_Invested"] <- cumsum(sum_df$buy_value)
+    sum_df[,"tot_Owned"] <- cumsum(sum_df$buy_qnt)
     
-    # current value of investment
-    latestPrice <- tail(sum_df$Price_AVG, 1)
-    sum_df[,"cum_value"] <- sum_df$cum_qnt*latestPrice
-    sum_df[,"cum_valueAtTime"] <- with(sum_df, cum_qnt*Price_AVG)
+    # Value of investment (according to price back then)
+    #latestPrice <- tail(sum_df$Price_AVG, 1)
+    #sum_df[,"cum_Value"] <- sum_df$tot_Owned*latestPrice
+    sum_df[,"cum_Value"] <- with(sum_df, tot_Owned*Price_AVG)
     
     # ROI
-    sum_df[,"ratioTEMP"] <- with(sum_df, cum_value/cum_inv)
-    sum_df[,"ROI"] <- with(sum_df, (cum_value-cum_inv)/cum_inv)
+    #sum_df[,"ratioTEMP"] <- with(sum_df, cum_Value/cum_Invested)
+    sum_df[,"PNL"] <- with(sum_df, cum_Value-cum_Invested)
+    sum_df[,"ROI%"] <- with(sum_df, PNL/cum_Invested)
     
-    # STOPPED HERE
-    time_Y <- tail(sum_df$Year, 1) - head(sum_df$Year, 1)
-    finalRatio <- tail(sum_df$ratioTEMP, 1)
-    
-    #ADJCALC
-    sum_df[,"buy_adj"] <- with(sum_df, buy_value/Adjusted)
-    sum_df[,"cum_adj"] <- cumsum(sum_df$buy_adj)
-    sum_df[,"cum_adjVal"] <- sum_df$cum_adj*latestPrice
-    sum_df[,"ROI_adj"] <- with(sum_df, (cum_adjVal-cum_inv)/cum_inv)
-    sum_df[,"ratioTEMP_Adj"] <- with(sum_df, cum_adjVal/cum_inv)
+    #ADJCALC - NOT IMPLEMENTED
+    #sum_df[,"buy_adj"] <- with(sum_df, buy_value/Adjusted)
+    #sum_df[,"cum_adj"] <- cumsum(sum_df$buy_adj)
+    #sum_df[,"cum_adjVal"] <- sum_df$cum_adj*latestPrice
+    #sum_df[,"ROI_adj"] <- with(sum_df, (cum_adjVal-cum_Invested)/cum_Invested)
     
     # ORGANIZE RESULTS
     res <- sum_df
@@ -160,24 +156,22 @@ server <- function(input, output) {
                    
                    REACT$summary <- DCA_summary(REACT$simulation)
                    
+                   #tidy-up dataframe for ggplot compatibility
+                   tidy_df <- pivot_longer(REACT$summary, 
+                                           cols=starts_with("cum_"), values_to = "Value",
+                                           names_to = "CumulData", names_prefix = "cum_") 
+                   
                    output$plot <- renderPlot(
-                     REACT$summary %>% 
+                     tidy_df %>% 
                        ggplot() +
-                       geom_line(aes(x=Year, y=cum_inv, color="inv")) +
-                       geom_line(aes(x=Year, y=cum_value, color="value")) +
-                       geom_line(aes(x=Year, y=cum_valueAtTime, color="valueAtTime")) +
+                       geom_line(aes(x=Year, y=Value, color=CumulData)) +
                        theme_light()
                    )
                    
                    output$hist <- renderPlot(
-                     REACT$summary %>% 
-                       pivot_longer(cols=starts_with("cum_"), 
-                                    names_to = "CumulativeData", names_prefix = "cum_", values_to = "Value"
-                                    ) %>%
-                       subset(!(CumulativeData == "qnt")) %>% #removes qnt
-                       
+                     tidy_df %>% 
                        ggplot() +
-                       geom_col(aes(x=Year, y=Value, fill=CumulativeData), position=position_dodge()) +
+                       geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
                        theme_light()
                    )
                    
