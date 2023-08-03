@@ -135,12 +135,15 @@ ui <- fluidPage(
   fluidRow(
     column(10, offset = 1,
       h1("some nice plot!"),
+      
       plotOutput("plot"),
       plotOutput("hist"),
       plotOutput("pnl"),
       plotOutput("asset"),
+      
       tableOutput("settings"),
       tableOutput("endopoints"),
+      
       dataTableOutput("table"),
     ),
   ),

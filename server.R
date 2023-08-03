@@ -32,6 +32,7 @@ server <- function(input, output) {
       str_remove(".")
     
     df[,"Price_AVG"] <- (df$Open + df$Close)/2 # average price (mean of OPEN and CLOSE price)
+    df[,"Price_Adj"] <- with(df, Adjusted)
     
     # ADD Posit Column (for plotting purposes)
     df[,"Date"] <- row.names(df) %>% as.POSIXct()
@@ -62,9 +63,17 @@ server <- function(input, output) {
   
   # Second, render plot
   output$market <- renderPlot({
-    ggplot(data = REACT$data_full) +
-      geom_line(aes(x=Date, y=Price_AVG)) +
+    data <-  REACT$data_full %>%
+      pivot_longer(cols = starts_with("Price_"), names_to = "PriceCalc", values_to = "Price")
+    
+    # Hide Price_Adj until user ticks the box 
+    if (input$infl_correction == FALSE){
+      data %<>% subset(!(PriceCalc=="Price_Adj"))}
+      
+    ggplot(data) +
+      geom_line(aes(x=Date, y=Price, color=PriceCalc)) +
       geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", linewidth =0.9) +
+      scale_color_manual(values = c("Price_AVG" = "gray", "Price_Adj" = "brown1")) + 
       annotate(geom="label", 
                label="Inv. Start", hjust=0, fill="lightblue",
                x=as.POSIXct(input$startdate+180), y=max(REACT$data_full$Price_AVG)*0.9) +
