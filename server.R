@@ -1,4 +1,5 @@
 library(shiny)
+library(shinythemes)
 library(quantmod)
 library(magrittr)
 library(dplyr)
@@ -72,10 +73,10 @@ server <- function(input, output) {
       
     ggplot(data) +
       geom_line(aes(x=Date, y=Price, color=PriceMethod)) +
-      geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="lightblue3", linewidth =0.9) +
+      geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="cornflowerblue", linewidth =0.9) +
       scale_color_manual(values = c("Price_AVG" = "black", "Price_Adj" = "brown1")) + 
       annotate(geom="label", 
-               label="Inv. Start", hjust=0, fill="lightblue",
+               label="Inv. Start", hjust=0, fill="cornflowerblue", color="white",
                x=as.POSIXct(input$startdate+180), y=max(REACT$data_full$Price_AVG)*0.9) +
       theme_light()
       })

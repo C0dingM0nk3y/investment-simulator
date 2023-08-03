@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(shinythemes)
 library(quantmod)
 library(magrittr)
 library(dplyr)
@@ -25,11 +26,11 @@ u <- function(text){ #quick formatting
 # 
 
 # UI ####
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("darkly"),
   title = "investment-simulator",
   
   # TITLE ####
-  fluidRow(
+    fluidRow(
     column(8, offset = 2, align = "center",
            h1("investment-simulator"),
            p("This small project came from the desire to help people understanding better why it is important to invest their money and why -despite there are some risks associated to investing- sticking to healthy investment strategies (like a simple DCA, see below), often produce a safe and reliable results despite requiring so little effort*, that even a simple computer program may take advantage of it."),
@@ -44,7 +45,7 @@ ui <- fluidPage(
   ),
   
   # NAVBAR ####
-  navbarPage(
+  navbarPage(theme = shinytheme("darkly"),
     title = "Select one Investment Strategy:",
     
     # DCA SIMULATOR ####
@@ -88,7 +89,7 @@ ui <- fluidPage(
   
   hr(),
   
-  fluidRow(align="center",
+      fluidRow(align="center",
            column(3, #offset = 1,
                   inputPanel(
                     h3("How to use this simulator"),
@@ -132,7 +133,7 @@ ui <- fluidPage(
     ),
   hr(),
   
-  fluidRow(
+    fluidRow(#theme = shinytheme("darkly"),
     column(10, offset = 1,
       h1("some nice plot!"),
       
@@ -151,7 +152,7 @@ ui <- fluidPage(
   
   # REBAL SIMULATOR ####
   tabPanel(title=strong("Rebalancing Simulator"),
-           fluidRow(align="center",
+               fluidRow(align="center",
                     column(12,
                           h2("[COMING SOON]"),
                            ),
@@ -162,7 +163,7 @@ ui <- fluidPage(
   
   hr(),
   
-  fluidRow(
+      fluidRow(
     column(10, offset = 1, align = "center",
         p("add this note somewhere: when used in combination with a ETF (aka, investing on the whole market at ONCE), DCA are one of the safest and more reliable sources of passive income.",
         a(href="https://www.investopedia.com/terms/e/etf.asp", "(what is a ETF?)"),
