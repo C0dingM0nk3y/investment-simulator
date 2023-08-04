@@ -187,6 +187,7 @@ server <- function(input, output) {
       summarise(buy_value = sum(buy_value),
                 buy_qnt  = sum(buy_qnt),
                 Price = mean(Price),
+                asset = head(asset, 1)
                 )
     
     # cumulative calc
@@ -242,7 +243,11 @@ server <- function(input, output) {
      tidy_df %>% 
        ggplot() +
        geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
-       theme_light()
+       scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
+       scale_y_continuous(breaks = scales::breaks_width(50000), 
+                          minor_breaks = scales::breaks_width(10000)) +
+       theme_light(base_size = 14) +
+       theme(legend.position = "none") 
    })
                    
    output$pnl <- renderPlot({
@@ -255,18 +260,31 @@ server <- function(input, output) {
        ggplot() +
        geom_col(aes(x=Year, y=PNL, fill=is.profit), position=position_dodge()) +
        scale_fill_manual(values = list("Profit" = "springgreen3", "Loss" = "brown1"), ) + 
-       theme_light()
+       scale_y_continuous(breaks = scales::breaks_width(50000), 
+                          minor_breaks = scales::breaks_width(10000)) +
+       ylab("Value") +
+       theme_light(base_size = 14) +
+       theme(legend.position = "none") 
    })
                    
    output$asset <- renderPlot({
      updateSimulation()
      
      asset <- REACT$summary
+     asset_name <- head(asset$asset,1)
      
      asset %>% 
        ggplot() +
-       geom_col(aes(x=Year, y=buy_qnt), position=position_dodge()) +
-       theme_light()
+       geom_col(aes(x=Year, y=buy_qnt, fill=asset_name), #asset name
+                position=position_dodge()) +
+       scale_fill_manual(values="gray") +
+       scale_color_manual(values="red") +
+       geom_line(aes(x=Year, 
+                     y=Price/max(Price)*max(buy_qnt), color="Price")) + #scale to show on same scale
+       ylab("Share Buy (per year)") +
+       theme_light(base_size = 14) +
+       theme(legend.position = "top") +
+       guides(fill=guide_legend(title="Asset Name:"), color=guide_legend(title="History:"))
    })
                    
 

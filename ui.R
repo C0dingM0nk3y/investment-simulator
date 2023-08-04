@@ -200,10 +200,12 @@ ui <- fluidPage(theme = shinytheme("darkly"),
            plotOutput("pnl", height = "300px"),
            ),
     column(4, style = 'border-left: 1px solid',
-           h4("Asset Accumulation"),
+           h4("Asset Accumulation (for each year)"),
            plotOutput("asset", height = "300px"),
            ),
   ),
+  
+  #dataTableOutput("table")
   ),
   
   # REBAL SIMULATOR ####
