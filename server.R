@@ -272,39 +272,54 @@ server <- function(input, output) {
                      {
                        #from df_last
                        end_df <- data.frame()
-                       end_df["Invested", 1] <- df_last[1, "cum_Invested", drop=T]
-                       end_df["Value", 1] <- df_last[1, "cum_Value"]
-                       end_df["Return (PNL)", 1] <-df_last[1, "PNL"]
-                       end_df["Return (PNL)", 2] <-df_last[1, "ROI%"]*100
+                       end_df["Invested", 1] <- df_last[1, "cum_Invested", drop=T] %>% round(0)
+                       end_df["Value", 1] <- df_last[1, "cum_Value"] %>% round(0)
+                       end_df["Returns (PNL)", 1] <-df_last[1, "PNL"] %>% round(0)
+                       end_df["Returns (PNL)", 2] <-df_last[1, "ROI%"]*100
                        end_df["Yearly Return", 2] <- 100*df_last[1, "ROI%", drop=T]/duration
                        
                        colnames(end_df) <- c("Total", "ROI %")
                        
-                       # Text formatting (units)
-                       end_df[,1] %<>% round(0) %>% 
-                         format(big.mark=".", decimal.mark = ",") %>%
-                         paste("$") %>% str_replace("NA .", "")
-                       
-                       end_df[,2] %<>% round(2) %>% paste("%") %>% str_replace("NA %", "")
-                       
                        output$endopoints <- renderTable(align = "r", #render table
                          rownames = TRUE, colnames = TRUE,
-                         end_df) 
+                         {
+                           # Text formatting (units)
+                           end_df[,1] %<>% format(big.mark=".", decimal.mark = ",") %>%
+                             paste("$") %>% str_replace("NA .", "")
+                           
+                           end_df[,2] %<>% round(2) %>% paste("%") %>% str_replace("NA %", "")
+                           
+                           end_df
+                           }) 
                        
                        output$endopoints2 <- renderTable(align = "r", #render table
                                                         rownames = TRUE, colnames = TRUE,
                                                         end_df) 
                        
                        end_plot <- data.frame(
-                         Total = factor(c("Invested", "Value", "Returns"), 
-                                        levels = c("Invested", "Value", "Returns")), #to ensure correct order in plot legend
+                         Total = factor(c("Invested", "Value", "Returns (PNL)"), 
+                                        levels = c("Invested", "Value", "Returns (PNL)")), #to ensure correct order in plot legend
                          Value = end_df[1:3, 1]
                        ) 
                        
                        ggplot(end_plot) +
-                         geom_col(aes(x=Total, y=Value, fill=Total)) +
-                         #scale_fill_manual(values = c("Invested" = "black", "Value" = "blue", "Returns" = "green")) + 
-                         theme_light()
+                         geom_col(aes(x=Total, y=Value, fill=Total), color="black") +
+                         ggtitle("Simulated Profits") +
+                         scale_y_continuous(breaks = scales::breaks_width(50000), 
+                                            minor_breaks = scales::breaks_width(10000)) +
+                         scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF", "Returns (PNL)" = "aquamarine")) + 
+                         geom_text(aes(x=Total, 
+                                       #y=Value + max(Value/20), #calculate max value then /20 = 5% of plot size 
+                                       y=Value*0.5, # middle of bar 
+                                       label=format(Value, big.mark=".") %>% paste("$")),
+                                  size=10
+                                   ) +
+                         theme_classic(base_size = 16) +
+                         theme(axis.title.x = element_blank(), axis.text.x = element_text(face="bold"),
+                               axis.title.y = element_blank(),
+                               plot.title=element_text(hjust=0.5, size = 18), #center(50%) and size of title
+                               plot.margin = margin(c(10,10,10,15)),
+                               legend.position= "none")
                    })
                    
                    output$table <- renderDataTable(
