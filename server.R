@@ -30,7 +30,9 @@ server <- function(input, output) {
     # CALCULATE AVERAGE PRICE 
     # removes symbol name from df headers #eg. from SPY.Open to SPY
     df <- data.frame(xts) #converts from xts object to standard df
-    colnames(df) %<>% str_remove(symbol)  %>% #remove symbol names
+    
+    symbolName <- str_replace(symbol, pattern = "-", ".") #replace "-" with "." (dataframe automatic name change)
+    colnames(df) %<>% str_remove(symbolName)  %>% #symbol that contain special characters
       str_remove(".")
     df %<>% drop_na() #filters out missing val
     
