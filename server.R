@@ -199,12 +199,6 @@ server <- function(input, output) {
     sum_df[,"PNL"] <- with(sum_df, cum_Value-cum_Invested)
     sum_df[,"ROI%"] <- with(sum_df, PNL/cum_Invested)
     
-    #ADJCALC - NOT IMPLEMENTED
-    #sum_df[,"buy_adj"] <- with(sum_df, buy_value/Adjusted)
-    #sum_df[,"cum_adj"] <- cumsum(sum_df$buy_adj)
-    #sum_df[,"cum_adjVal"] <- sum_df$cum_adj*latestPrice
-    #sum_df[,"ROI_adj"] <- with(sum_df, (cum_adjVal-cum_Invested)/cum_Invested)
-    
     # ORGANIZE RESULTS
     res <- sum_df
     
