@@ -132,6 +132,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                    actionButton("symbolsubmit", label = "Search", width = "100%"),
                             ),
                           ),
+                          p(em("also incl. special char. (e.g. '^' for '^GSPC')]")),
                           
                           hr(),
                           
