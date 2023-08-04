@@ -8,6 +8,8 @@ library(stringr)
 library(lubridate)
 library(ggplot2)
 
+options(scipen = 99)
+
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
@@ -117,7 +119,7 @@ server <- function(input, output) {
     REACT$duration %>% paste("years")
   )
   
-  output$settings <- renderTable(
+  output$settings <- renderTable(align = "r",
     rownames = TRUE, colnames = FALSE,
     {
       #from inputs data
@@ -273,7 +275,11 @@ server <- function(input, output) {
                        end_df["Total Return (%)", 1] <-df_last[1, "ROI%"]*100
                        end_df["Yearly Return (%)", 1] <- 100*df_last[1, "ROI%", drop=T]/duration
                        
-                       output$endopoints <- renderTable( #render table
+                       end_df[,1] %<>% round(2) %>% 
+                         format(big.mark=".", decimal.mark = ",") %>%
+                         paste(c("$","$","$","%","%"))
+                       
+                       output$endopoints <- renderTable(align = "r", #render table
                          rownames = TRUE, colnames = FALSE,
                          end_df) 
                        
