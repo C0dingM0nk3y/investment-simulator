@@ -78,10 +78,6 @@ server <- function(input, output) {
   output$market <- renderPlot({
     data <-  REACT$data_full %>%
       pivot_longer(cols = starts_with("Price_"), names_to = "PriceMethod", values_to = "Price")
-    
-    # Hide Price_Adj until user ticks the box 
-    if (input$infl_correction == FALSE){
-      data %<>% subset(!(PriceMethod=="Price_Adj"))}
       
     ggplot(data) +
       geom_line(aes(x=Date, y=Price, color=PriceMethod)) +
@@ -94,11 +90,11 @@ server <- function(input, output) {
                x=as.POSIXct(input$startdate+180), y=max(data$Price)*0.9) +
       theme_classic(base_size = 12) +
       theme(axis.title.x = element_blank(), legend.title = element_blank(), 
-            plot.title=element_text(hjust=0.5, size = 16), #center(50%) and size of title
+            plot.title=element_text(hjust=0.45, size = 16), #center(50%) and size of title
             #plot.title=element_text(size = 16), #center(40%) and bold title
-            plot.margin = margin(c(10,10,10,15)),
+            plot.margin = margin(c(10,15,10,15)),
             #legend.position= c(0.9, 0.25)) 
-            legend.position= "right", legend.margin = margin(0)) 
+            legend.position= "top", legend.margin = margin(0)) 
       })
   
   # UPDATE ASSET ("Search")
