@@ -32,16 +32,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   # TITLE ####
     fluidRow(
     column(8, offset = 2, align = "center",
-           h1("investment-simulator"),
-           p("This small project came from the desire to help people understanding better why it is important to invest their money and why -despite there are some risks associated to investing- sticking to healthy investment strategies (like a simple DCA, see below), often produce a safe and reliable results despite requiring so little effort*, that even a simple computer program may take advantage of it."),
- 
-           p(em(
-             "Many people say to invest early and benefit long term.",br(),
-             "Yet many others seem to have lost so much with their invesments, and they regret they have taken that decision.",br(),
-           "Who to trust, then?"),
-           p("As a Data Scientist, I invite you ", u("to trust no one"), ".", br(), 
-               "Instead, have a look at what the data suggest, and draw your own conclusions."),),
-  ),
+           h1("investment-simulator_v0"),
+           p("some text"),
+           ),
   ),
   
   # NAVBAR ####
@@ -57,14 +50,8 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                  h3("What is Dollar Cost Averaging?"), 
                ),
                mainPanel(width=7,
-                 p(strong("Dollar Cost Averaging (DCA) -"), 
-                   a(href="https://en.wikipedia.org/wiki/Dollar_cost_averaging", "link to wikipedia"),
-                   br(),
-                   "DCA refers to the practice of purchasing a ",strong("fixed value"), "of a asset at a", strong("specific interval of time"), "and", strong("regardless of current market price"), br(),
-                   em("For example, a simple DCA strategy may be to buy 100€ worth of an ETF tracking the S&P500 index every 30 days. This is the defoult setting for this web-tool."),
-                 ),
-                 p("DCA is one of the simpler-yet-effective LONG-TERM investment strategy. As there is ", u("no attempt to time the market"), "this strategy can be completely passive, and there is no need for the investor to costantly be updated on current market situation. By splitting the investment into many small instances, the investor is buying the asset on an average price, and minimizing the effect of market volatility. While there may be time at which the investment will seem to be in loss, keep buying at a discounted price will ensure an even higher profit on the subsequent expansion phase f the market."),
-               ),
+                 p("test!!"),
+             ),
              ),
              
              hr(),
@@ -74,20 +61,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                  h3("How to use this tool?"), 
                ),
                mainPanel(align="center", width=7,
-                         p(strong("DCA are very easy to implement and mantain."), 
-                           "However, it is of foremost importance to", strong("carefully select the investment to which to commit to"), "and preferably do so ", u("with the assitance of a financial advisor"), "(of which, I am not)"),
-                         p(strong("In fact, DCA are so simple that even a computer program can profit from using them!")),
-                         #p("Try for yourself by using the tool below to see the effect of a DCA of differetn kind of assets."),
-                         hr(),
-                         h4("This webtool uses historical data from Yahoo Finance to simulate the effect of a DCA on most common investment options"),
-                         h4(span(style="color:red", u("Challenge:")),
-                            em("can you find one investment that did NOT produce income, after >20 years? ;)"),
-                         
+                         p("asd"),
                ),
              ),
-             
-             ),
-  
   hr(),
   
       sidebarLayout(
@@ -214,21 +190,75 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                            ),
                     ),
   ),
+  
+  # TEXT REPOSITORY ####
+  tabPanel(title=strong("Clean slate, clean brain"),
+           sidebarLayout(
+             sidebarPanel("Intro"),
+             mainPanel(align = "center",
+                p("This small project came from the desire to help people understanding better why it is important to invest their money and why -despite there are some risks associated to investing- sticking to healthy investment strategies (like a simple DCA, see below), often produce a safe and reliable results despite requiring so little effort*, that even a simple computer program may take advantage of it."),
+                p(em(
+                  "Many people say to invest early and benefit long term.",br(),
+                  "Yet many others seem to have lost so much with their invesments, and they regret they have taken that decision.",br(),
+                  "Who to trust, then?"),
+                  p("As a Data Scientist, I invite you ", u("to trust no one"), ".", br(), 
+                    "Instead, have a look at what the data suggest, and draw your own conclusions."),),
+                ),
+             ),
+           hr(),
+           sidebarLayout(
+             sidebarPanel(
+               h3("What is Dollar Cost Averaging?"), 
+             ),
+             mainPanel(width=7,
+                       p(strong("Dollar Cost Averaging (DCA) -"), 
+                         a(href="https://en.wikipedia.org/wiki/Dollar_cost_averaging", "link to wikipedia"),
+                         br(),
+                         "DCA refers to the practice of purchasing a ",strong("fixed value"), "of a asset at a", strong("specific interval of time"), "and", strong("regardless of current market price"), br(),
+                         em("For example, a simple DCA strategy may be to buy 100€ worth of an ETF tracking the S&P500 index every 30 days. This is the defoult setting for this web-tool."),
+                       ),
+                       p("DCA is one of the simpler-yet-effective LONG-TERM investment strategy. As there is ", u("no attempt to time the market"), "this strategy can be completely passive, and there is no need for the investor to costantly be updated on current market situation. By splitting the investment into many small instances, the investor is buying the asset on an average price, and minimizing the effect of market volatility. While there may be time at which the investment will seem to be in loss, keep buying at a discounted price will ensure an even higher profit on the subsequent expansion phase f the market."),
+             ),
+           ),
+           hr(),
+           sidebarLayout(
+             sidebarPanel(
+               h3("How to use this tool?"), 
+             ),
+             mainPanel(align="center", width=7,
+                       p(strong("DCA are very easy to implement and mantain."), 
+                         "However, it is of foremost importance to", strong("carefully select the investment to which to commit to"), "and preferably do so ", u("with the assitance of a financial advisor"), "(of which, I am not)"),
+                       p(strong("In fact, DCA are so simple that even a computer program can profit from using them!")),
+                       #p("Try for yourself by using the tool below to see the effect of a DCA of differetn kind of assets."),
+                       hr(),
+                       h4("This webtool uses historical data from Yahoo Finance to simulate the effect of a DCA on most common investment options"),
+                       h4(span(style="color:red", u("Challenge:")),
+                          em("can you find one investment that did NOT produce income, after >20 years? ;)"),
+                       ),
+             ),
+           ),
+           hr(),
+           sidebarLayout(
+             sidebarPanel("Bottom Text"),
+             mainPanel(align = "center",
+                        p("add this note somewhere: when used in combination with a ETF (aka, investing on the whole market at ONCE), DCA are one of the safest and more reliable sources of passive income.",
+                          a(href="https://www.investopedia.com/terms/e/etf.asp", "(what is a ETF?)"),
+                        ),
+                        
+                        p(em("*all it take is to do some reserch to select A DIVERSIFIED PANEL OF ASSETS that is matching with our financial goals, risk tolerance, and desire to impact future economy. This should be discussed with a financial advisor, to make sure to make sound choices. After that, it is enough to set-up a recurring transaction and... that is it, actually.")),
+                        p("DCA are one of the most simple investment strategy and one that requires little maintenance, while still providing with a reasonably safe source of extra incomes.",
+                          "Yet, few people use them. Mainly, becuase of their fear of losing money during hte (inevitable!) phases of drowdown. This this tool, I hope people will be able to play around, and discover themselves that not only the drowdown phases are a physiological part of the process, and should not be feared. But actually those are the phases where real gain are done",
+                          "If you are new to investing, you can use this tool to:")
+                 ),
+           ),
+  ),
   ),
   
-  
+  # Credits ####
   hr(),
-  
-      fluidRow(
-    column(10, offset = 1, align = "center",
-        p("add this note somewhere: when used in combination with a ETF (aka, investing on the whole market at ONCE), DCA are one of the safest and more reliable sources of passive income.",
-        a(href="https://www.investopedia.com/terms/e/etf.asp", "(what is a ETF?)"),
-        ),
-           
-        p(em("*all it take is to do some reserch to select A DIVERSIFIED PANEL OF ASSETS that is matching with our financial goals, risk tolerance, and desire to impact future economy. This should be discussed with a financial advisor, to make sure to make sound choices. After that, it is enough to set-up a recurring transaction and... that is it, actually.")),
-        p("DCA are one of the most simple investment strategy and one that requires little maintenance, while still providing with a reasonably safe source of extra incomes.",
-          "Yet, few people use them. Mainly, becuase of their fear of losing money during hte (inevitable!) phases of drowdown. This this tool, I hope people will be able to play around, and discover themselves that not only the drowdown phases are a physiological part of the process, and should not be feared. But actually those are the phases where real gain are done",
-          "If you are new to investing, you can use this tool to:")
-    ),
-    ),
-  )
+  div(align="center",
+      p("developed by:", a("C0dingM0nk3y", href="https://github.com/C0dingM0nk3y/"),
+       ":|: source code available on GitHub:", a("investment-simulator", href="https://github.com/C0dingM0nk3y/investment-simulator"),
+      ":|: Check out my repository for other tools for financial education", em("(coming soon)"))),
+  hr(),
+)
