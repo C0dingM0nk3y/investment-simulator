@@ -20,8 +20,10 @@ server <- function(input, output) {
     #> get data using quantmod::getSymbolData(), then 
     #> perform basic df tidying, like adding Date column and calculating AVG price
 
+    symbol %<>% str_trim() #removes whitespaces from symbol name (prevents errors on search)
+    
     # DOWNLOAD LATEST DATA FROM YAHOO
-    xts <- getSymbols(symbol, 
+    xts <- getSymbols(str_trim(symbol), 
                       from = startdate,
                       auto.assign = FALSE) #required to assign to custom variable name
     
