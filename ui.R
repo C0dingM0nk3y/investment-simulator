@@ -103,6 +103,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                actionButton("symbolsubmit", label = "Search", width = "100%"),
                       ),
                       ),
+                      p(em("also incl. special char. (e.g. '^' for '^GSPC')]")),
                       
                       p("Use",
                         a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
