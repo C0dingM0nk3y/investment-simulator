@@ -23,20 +23,53 @@ u <- function(text){ #quick formatting
   return(underlinedText)
 }
 
+textcol <- function(text, color="#84b0fa"){ #quick formatting "#375a7f"
+  underlinedText <- span(style=paste0("color:",color),
+                         text)
+  return(underlinedText)
+}
+
 # 
 
 # UI ####
 ui <- fluidPage(theme = shinytheme("darkly"),
   title = "investment-simulator",
   
+  br(), #black line on top
   # TITLE ####
-    fluidRow(
-    column(8, offset = 2, align = "center",
-           h1("investment-simulator_v0"),
-           p("some text"),
-           ),
-  ),
-  
+    sidebarLayout(
+      mainPanel(align= "center", width = 6, 
+                h2("investment-simulator_v0"),
+                p(em("preliminary release: 2023.08.05")),
+                hr(),
+                p("The aim of this tool is to show to the younger investors that", 
+                  textcol("there is no need to live bear market phases in paranoia"), 
+                  "as on the long run (>15 years and above),", 
+                  textcol("enduring investors are always rewarded."), 
+                  em("And the earleier they started, the higher the returns!")),
+                p("It also aims to show how, the combination of", u(strong("simple automated rules,")), 
+                  "and", u(strong("completely neglecting market prices and trends")), 
+                  "it is possible to build solid strategy that lead to ", u("substantial profits and zero stress")),
+                p("On the long run, the only varialble that ", u("really"), "makes the difference, is when you begun!") %>% 
+                  strong() %>%textcol(color="orange")
+                ),
+      sidebarPanel(align = "center", width = 5,
+                  h4("How does it work?") %>% u(),
+                  p("Choose ",textcol("One asset"),".",br(),
+                    
+                    "Choose a ",textcol("Date in the past")," and an ",textcol("Amount to invest"),".",br(),
+                    
+                    "The script will use historical price data, to simulate a purchase", 
+                    textcol("exactly every 30 days(*)", color = "orange"), u("[independently of the market price/trends]"),),
+                  
+                  p(em("How much would you have earned if you did so?")),
+                  br(),
+                  textcol(color="orange", 
+                          em("*this strategy is called DCA. Scroll to the bottom to find a description and some references"))
+                 
+         ),
+    ),
+
   # NAVBAR ####
   navbarPage(theme = shinytheme("darkly"),
     title = "Select one Investment Strategy:",
@@ -46,96 +79,115 @@ ui <- fluidPage(theme = shinytheme("darkly"),
              
              #> INTRO ####
              sidebarLayout(
-               sidebarPanel(
-                 h3("What is Dollar Cost Averaging?"), 
+               sidebarPanel(width = 3, align="center",
+                 h3("Chose on Asset from Yahoo Finance"),
+                 p("Historical data is extracted from ", a("Yahoo Finance", href="https://finance.yahoo.com/lookup/?guccounter=1"),),
+                 
                ),
-               mainPanel(width=7,
-                 p("test!!"),
-             ),
+               mainPanel(width=9,
+                         fluidRow(
+                           column(7, align="center",
+                                  h3("1. Find Yahoo Finance tracker"),
+                                  p("Refer to",
+                                    a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
+                                    "to find the ",code("Symbol.name"), "for your investment of choice."),
+                                  
+                                  # split columns in 2 parts (to align search box to search button)
+                                  fluidRow(
+                                    column(6, offset=2, textInput("symbol", label="Paste it below and hit 'Search'", value = "SPY",  width = "100%",
+                                                                  placeholder = "Symbol Name"),),
+                                    column(3, align="left", br(), #h3() is empty, as spacer 
+                                           actionButton("symbolsubmit", label = "Search", width = "100%"),
+                                    ),
+                                  ),
+                                  br(),
+                                  p(em("1) some of Yahoo symbol names are different than those used elsewhere. Make sure to check the spelling on their website")),
+                                  p(em("2) some symbol names include special char. (e.g. ^ for ^GSPC)")),
+                                  ),
+                           
+                           column(5, align="center", style = 'border-left: 1px solid',
+                                 h4("Common investments Symbols:"),
+                                 
+                                 #div(style="background:white; color:black; font-size:75%; width:70%",
+                                 div(align="left", style="font-size:80%; width:100%",
+                                     em(
+                                       strong("^GSPC"), "=  S&P500 (Index)",br(),
+                                       strong("^IXIC"), "=  NASDAQ (Index)",br(),
+                                       strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
+                                       strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
+                                       strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),br(),
+                                       strong("SPY"), "=  S&P500 Index Tracker (ETF)",br(),
+                                       strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
+                                       strong("EEM"), "=  Emerging Markets (ETF)",br(),
+                                       strong("EWI"), "=  Italian Market (ETF)",br(),br(),
+                                       strong("GOOG"), "=  Google (Stock)",br(),
+                                       strong("AAPL"), "=  Apple (Stock)",br(),br(),
+                                       strong("BTC-USD"), "=  Bitcoin (Crypto)",br(),
+                                       strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
+                                     ),
+                                 ),
+                                 ),
+                           ),
+                         ),
              ),
              
-             hr(),
-             
-             sidebarLayout(
-               sidebarPanel(
-                 h3("How to use this tool?"), 
-               ),
-               mainPanel(align="center", width=7,
-                         p("asd"),
-               ),
-             ),
   hr(),
   
-      sidebarLayout(
-               sidebarPanel(align="center", width = 3, #offset = 1,
-                      h4("Examples of common investments:"),
+  sidebarLayout(
+           sidebarPanel(align="center", width = 3, #offset = 1,
+                  h4("Examples of common investments:"),
 
-                      #div(style="background:white; color:black; font-size:75%; width:70%",
-                      div(align="left", style="font-size:80%; width:100%",
-                        em(
-                        strong("^GSPC"), "=  S&P500 (Index)",br(),
-                        strong("^IXIC"), "=  NASDAQ (Index)",br(),
-                        strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
-                        strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
-                        strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),br(),
-                        strong("SPY"), "=  S&P500 Index Tracker (ETF)",br(),
-                        strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
-                        strong("EEM"), "=  Emerging Markets (ETF)",br(),
-                        strong("EWI"), "=  Italian Market (ETF)",br(),br(),
-                        strong("GOOG"), "=  Google (Stock)",br(),
-                        strong("AAPL"), "=  Apple (Stock)",br(),br(),
-                        strong("BTC-USD"), "=  Bitcoin (Crypto)",br(),
-                        strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
-                        )
-                        ),
+                  #div(style="background:white; color:black; font-size:75%; width:70%",
+                  div(align="left", style="font-size:80%; width:100%",
+                    em(
+                    strong("^GSPC"), "=  S&P500 (Index)",br(),
+                    strong("^IXIC"), "=  NASDAQ (Index)",br(),
+                    strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
+                    strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
+                    strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),br(),
+                    strong("SPY"), "=  S&P500 Index Tracker (ETF)",br(),
+                    strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
+                    strong("EEM"), "=  Emerging Markets (ETF)",br(),
+                    strong("EWI"), "=  Italian Market (ETF)",br(),br(),
+                    strong("GOOG"), "=  Google (Stock)",br(),
+                    strong("AAPL"), "=  Apple (Stock)",br(),br(),
+                    strong("BTC-USD"), "=  Bitcoin (Crypto)",br(),
+                    strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
+                    )
+                    ),
+           ),
+    
+           mainPanel(width = 9,
+             fluidRow(align="center",
+               column(6, #offset = 1,
+                      
+                      
+                      hr(),
+                      
+                      # split columns in 2 parts (to align search box to search button)
+                      h3("2. Investment Amount"),
+                               
+                      numericInput("monthly_inv",
+                                  "Monthly Investment:",
+                                  value = 100, min = 0, step = 100),
+                                                
+                      ), 
+               column(6, #offset = 1,
+                      
+                      h3("3. Investment Start Date"),
+                      plotOutput("market", height = "150px", width = "90%"),
+                      uiOutput("ui_startDate"),
+                      p("Investment duration:", strong(textOutput("duration", inline = T))),
+                      hr(),
+                      h3("4. Inflation Correction"),
+                      div(style="width:75%",
+                       em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
+                      checkboxInput("infl_correction",
+                                    span("Apply Inflation Correction?", style="color:orange"), value = FALSE),
                ),
-        
-               mainPanel(width = 9,
-                 fluidRow(align="center",
-                   column(6, #offset = 1,
-                          h3("1. Find Yahoo Finance tracker"),
-                          
-                          p("Use",
-                            a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
-                            "to find a list supported symbols names"),
-                          p("Retrieve the correct",code("Symbol name"), "from Yahoo website and paste it below:"),         
-                          
-                          # split columns in 2 parts (to align search box to search button)
-                          fluidRow(
-                            column(6, offset=2, textInput("symbol", label="", value = "SPY",  width = "100%",
-                                                          placeholder = "Symbol Name"),),
-                            column(3, align="left", br(), #h3() is empty, as spacer 
-                                   actionButton("symbolsubmit", label = "Search", width = "100%"),
-                            ),
-                          ),
-                          p(em("also incl. special char. (e.g. '^' for '^GSPC')]")),
-                          
-                          hr(),
-                          
-                          # split columns in 2 parts (to align search box to search button)
-                          h3("2. Investment Amount"),
-                                   
-                          numericInput("monthly_inv",
-                                      "Monthly Investment:",
-                                      value = 100, min = 0, step = 100),
-                                                    
-                          ), 
-                   column(6, #offset = 1,
-                          
-                          h3("3. Investment Start Date"),
-                          plotOutput("market", height = "150px", width = "90%"),
-                          uiOutput("ui_startDate"),
-                          p("Investment duration:", strong(textOutput("duration", inline = T))),
-                          hr(),
-                          h3("4. Inflation Correction"),
-                          div(style="width:75%",
-                           em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
-                          checkboxInput("infl_correction",
-                                        span("Apply Inflation Correction?", style="color:orange"), value = FALSE),
-                   ),
-                 ),
-               ),   
-      ),
+             ),
+           ),   
+  ),
 
   hr(),
   
@@ -194,7 +246,24 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   ),
   
   # TEXT REPOSITORY ####
-  tabPanel(title=strong("Clean slate, clean brain"),
+  tabPanel(title=strong("About this Project"),
+           
+           sidebarLayout(
+             sidebarPanel(align = "right", 
+                       h3("Project Aim"),
+             ),
+             mainPanel(align= "center", width = 7, 
+                       p("The aim of this tool is to show to the younger investors that", 
+                         textcol("there no need to fear the cyclical downtrends of the market"), 
+                         "as on the long run (>15 years and above),", 
+                         textcol("the enduring investors are always rewarded."), 
+                         em("And the earleier they started, the higher the returns!")),
+                       p("It also aims to show how, with", u(strong("simple but strict rules,")), "it is possible to build a strategy that will produce substantial profits, without any need to track the market, or dedicate any time to it"),
+             ),
+           ),
+           hr(),
+           
+           
            sidebarLayout(
              sidebarPanel("Intro"),
              mainPanel(align = "center",
@@ -208,6 +277,17 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                 ),
              ),
            hr(),
+           sidebarLayout(
+             sidebarPanel(align= "center", width = 4,
+                       h2("Peep-talk"),
+                       p(em("preliminary release")),
+             ),
+             mainPanel(align = "center", width = 8,
+                          p("I wrote this tool for those young/new investors who are worried to lose money because of market fluctuations, and therefore miss on precious opportunities to invest their money. Worse, they attempt to time the market(with little experience), growing anxious about thier choices and end up losing sleep and money through trading."),
+                          p("I hope this tool will help someone to grow more confidence into this process, and and begin their path toward financial freedom"),
+             ),
+           ),
+           
            sidebarLayout(
              sidebarPanel(
                h3("What is Dollar Cost Averaging?"), 
