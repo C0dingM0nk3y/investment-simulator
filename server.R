@@ -200,12 +200,6 @@ server <- function(input, output) {
     sum_df[,"PNL"] <- with(sum_df, cum_Value-cum_Invested)
     sum_df[,"ROI%"] <- with(sum_df, PNL/cum_Invested)
     
-    #ADJCALC - NOT IMPLEMENTED
-    #sum_df[,"buy_adj"] <- with(sum_df, buy_value/Adjusted)
-    #sum_df[,"cum_adj"] <- cumsum(sum_df$buy_adj)
-    #sum_df[,"cum_adjVal"] <- sum_df$cum_adj*latestPrice
-    #sum_df[,"ROI_adj"] <- with(sum_df, (cum_adjVal-cum_Invested)/cum_Invested)
-    
     # ORGANIZE RESULTS
     res <- sum_df
     
@@ -247,7 +241,7 @@ server <- function(input, output) {
        scale_y_continuous(breaks = scales::breaks_width(50000), 
                           minor_breaks = scales::breaks_width(10000)) +
        theme_light(base_size = 14) +
-       theme(legend.position = "none") 
+       theme(legend.position = "right") 
    })
                    
    output$pnl <- renderPlot({
