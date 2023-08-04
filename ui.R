@@ -169,21 +169,36 @@ ui <- fluidPage(theme = shinytheme("darkly"),
 
   hr(),
   
+  h1("Plots [To be finished]"),
   
-    fluidRow(#theme = shinytheme("darkly"),
-    column(10, offset = 1,
-      h1("some nice plot!"),
-      
-      plotOutput("plot"),
-      plotOutput("hist"),
-      plotOutput("pnl"),
-      plotOutput("asset"),
-      
-      plotOutput("end_plot"),
-      
-      dataTableOutput("table"),
+  sidebarLayout(#theme = shinytheme("darkly"),
+      sidebarPanel(
+        h4("Comparison: invested vs. value"),
+           #tableOutput("endopoints"),
+      ),
+      mainPanel(
+        plotOutput("hist"),
+      )
     ),
+  
+  sidebarLayout(#theme = shinytheme("darkly"),
+    sidebarPanel(
+      h4("Profit and Losses (PNL)"),
+    ),
+    mainPanel(
+      plotOutput("pnl"),
+    )
   ),
+  
+  #sidebarLayout(sidebarPanel( h4("Other PLOTS"),),
+  #              mainPanel(plotOutput("asset"),
+  #                        plotOutput("end_plot"),),
+  #),
+  
+  #sidebarLayout(sidebarPanel( h4("FULL DATA"),),
+  #    mainPanel(dataTableOutput("table"),),
+  #  ),
+  
   ),
   
   # REBAL SIMULATOR ####
