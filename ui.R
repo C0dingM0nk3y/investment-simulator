@@ -91,9 +91,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   hr(),
   
       sidebarLayout(
-
                sidebarPanel(align="center", width = 3, #offset = 1,
                       h4("Examples of common investments:"),
+
                       #div(style="background:white; color:black; font-size:75%; width:70%",
                       div(align="left", style="font-size:80%; width:100%",
                         em(

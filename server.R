@@ -14,11 +14,15 @@ options(scipen = 99)
 server <- function(input, output) {
   
   # BUILD UI using DEFAULT/USER DATA ####
-  
-  # OUTPUT: PLOT Market trends
+
   symbolData <- function(symbol, startdate){
     #> get data using quantmod::getSymbolData(), then 
     #> perform basic df tidying, like adding Date column and calculating AVG price
+
+    #sanity check
+    startdate <- ifelse(is.null(startdate), 
+                        "1950-01-01", #prevent crash on server first load
+                        startdate)
 
     symbol %<>% str_trim() #removes whitespaces from symbol name (prevents errors on search)
     
@@ -30,7 +34,9 @@ server <- function(input, output) {
     # CALCULATE AVERAGE PRICE 
     # removes symbol name from df headers #eg. from SPY.Open to SPY
     df <- data.frame(xts) #converts from xts object to standard df
-    colnames(df) %<>% str_remove(symbol)  %>% #remove symbol names
+    
+    symbolName <- str_replace(symbol, pattern = "-", ".") #replace "-" with "." (dataframe automatic name change)
+    colnames(df) %<>% str_remove(symbolName)  %>% #symbol that contain special characters
       str_remove(".")
     df %<>% drop_na() #filters out missing val
     
@@ -59,23 +65,19 @@ server <- function(input, output) {
     REACT$minDate <- row.names(REACT$data_full) %>% 
       as.Date() %>% min()
     
-    REACT$duration <- difftime(today(), REACT$minDate, units = "weeks") %>% 
+    REACT$duration_n <- difftime(today(), REACT$minDate, units = "weeks") %>% 
       divide_by(52) %>%
-      floor() 
+      floor()  %>% as.numeric()
     
     sliderInput(inputId = "startdate", label="Select Start Date",
-                min = isolate(REACT$minDate), max=today()-366,
-                value= isolate(REACT$minDate))
+                min = REACT$minDate, max=today()-366,
+                value= REACT$minDate)
     })
   
   # Second, render plot
   output$market <- renderPlot({
     data <-  REACT$data_full %>%
       pivot_longer(cols = starts_with("Price_"), names_to = "PriceMethod", values_to = "Price")
-    
-    # Hide Price_Adj until user ticks the box 
-    if (input$infl_correction == FALSE){
-      data %<>% subset(!(PriceMethod=="Price_Adj"))}
       
     ggplot(data) +
       geom_line(aes(x=Date, y=Price, color=PriceMethod)) +
@@ -88,11 +90,11 @@ server <- function(input, output) {
                x=as.POSIXct(input$startdate+180), y=max(data$Price)*0.9) +
       theme_classic(base_size = 12) +
       theme(axis.title.x = element_blank(), legend.title = element_blank(), 
-            plot.title=element_text(hjust=0.5, size = 16), #center(50%) and size of title
+            plot.title=element_text(hjust=0.45, size = 16), #center(50%) and size of title
             #plot.title=element_text(size = 16), #center(40%) and bold title
-            plot.margin = margin(c(10,10,10,15)),
+            plot.margin = margin(c(10,15,10,15)),
             #legend.position= c(0.9, 0.25)) 
-            legend.position= "right", legend.margin = margin(0)) 
+            legend.position= "top", legend.margin = margin(0)) 
       })
   
   # UPDATE ASSET ("Search")
@@ -103,32 +105,34 @@ server <- function(input, output) {
     REACT$minDate <- row.names(REACT$data_full) %>% 
       as.Date() %>% min()
     
-    REACT$duration <- difftime(today(), input$startdate, units = "weeks") %>% 
+    REACT$duration_n <- difftime(today(), input$startdate, units = "weeks") %>% 
       divide_by(52) %>%
-      floor() 
+      floor() %>% as.numeric()
     
     updateSliderInput(inputId = "startdate", min=REACT$minDate)
   })
   
-  # UPDATE duration
-  observeEvent(input$startdate,
-               REACT$duration <- difftime(today(), input$startdate, units = "weeks") %>% 
-                 divide_by(52) %>%
-                 floor() 
+  # UPDATE on input change
+  observeEvent(list(input$startdate, input$infl_correction, input$monthly_inv),
+               updateSimulation()
   )
   
   # OUTPUT: TEXT (Investment Duration)
   output$duration <- renderText(
-    REACT$duration %>% paste("years")
+    REACT$duration_n %>% paste("years")
   )
   
   output$settings <- renderTable(align = "r",
     rownames = TRUE, colnames = FALSE,
     {
+      #sanity check
+      startdate <- ifelse(is.null(input$startdate), 
+                          "1950-01-01", #prevent crash on server first load
+                          input$startdate)
       #from inputs data
-      set_df <- data.frame(Value = input$symbol, row.names = "Investment Name")
-      set_df["Start Date", 1] <- input$startdate %>% as.Date() %>% as.character() #currently causing error message
-      set_df["Total Duration", 1] <- REACT$duration %>% paste("years")
+      set_df <- data.frame(Value = paste0("*",input$symbol,"*"), row.names = "Investment Name")
+      set_df["Start Date", 1] <- startdate %>% as.Date() %>% as.character() #currently causing error message
+      set_df["Total Duration", 1] <- REACT$duration_n %>% paste("years")
       set_df["Monthly Investment", 1] <- paste0(input$monthly_inv, "$")
       set_df["Inflation Correction", 1] <- input$infl_correction
       set_df
@@ -207,68 +211,66 @@ server <- function(input, output) {
     return(res)
   }
   
-  # Update plots and tables             
-  observeEvent(input$runAnalysis,
-                 {
-                   #isolate variable to avoid constant refreshing while user set parameters
-                   REACT$simul <- DCA_simulate(isolate(input$symbol), 
-                                                   isolate(input$startdate), 
-                                                   isolate(input$monthly_inv))
+  updateSimulation <- reactive(
+    {
+      #isolate variable to avoid constant refreshing while user set parameters
+      REACT$simul <- DCA_simulate(isolate(input$symbol), #only input$symbol is isolated, so it only changes if user hit "search"
+                                  input$startdate, 
+                                  input$monthly_inv)
+      REACT$summary <- DCA_summary(REACT$simul, input$infl_correction)
+      
+      # used by different plots
+      REACT$duration_n <- difftime(REACT$simul$Date %>% tail(1), 
+                           REACT$simul$Date %>% head(1),
+                           units = "weeks") %>% 
+        divide_by(52) %>%
+        floor() %>% as.numeric()
+    }
+  )
+  
+  # Update shared dataset at every change of variable             
+  observeEvent(input$symbolsubmit,
+               {updateSimulation()})
+       
+   # PLOTS AND TABLES ####                
+   output$hist <- renderPlot({
+     updateSimulation()
+     
+     tidy_df <- pivot_longer(REACT$summary, 
+                             cols=starts_with("cum_"), values_to = "Value",
+                             names_to = "CumulData", names_prefix = "cum_") 
+     tidy_df %>% 
+       ggplot() +
+       geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
+       theme_light()
+   })
                    
-                   REACT$summary <- DCA_summary(REACT$simul, input$infl_correction)
+   output$pnl <- renderPlot({
+     updateSimulation()
+     
+     pnl <- REACT$summary
+     pnl[,"is.profit"] <- ifelse(pnl$PNL >= 0, "Profit", "Loss")
+     
+     pnl %>% 
+       ggplot() +
+       geom_col(aes(x=Year, y=PNL, fill=is.profit), position=position_dodge()) +
+       scale_fill_manual(values = list("Profit" = "springgreen3", "Loss" = "brown1"), ) + 
+       theme_light()
+   })
                    
-                   # used by different plots
-                   duration <- difftime(REACT$simul$Date %>% tail(1), 
-                                        REACT$simul$Date %>% head(1),
-                                        units = "weeks") %>% 
-                     divide_by(52) %>%
-                     floor() %>% as.numeric()
-                   
-                   
-                   # additional df required by some plots
-                   tidy_df <- pivot_longer(REACT$summary, 
-                                           cols=starts_with("cum_"), values_to = "Value",
-                                           names_to = "CumulData", names_prefix = "cum_") 
-                   
-                   df_start <- REACT$simul %>% head(1) #Start data
-                   df_last <- REACT$summary %>% tail(1) #Summary end data
-                   
-                   output$plot <- renderPlot(
-                     tidy_df %>% 
-                       ggplot() +
-                       geom_line(aes(x=Year, y=Value, color=CumulData)) +
-                       theme_light()
-                   )
-                   
-                   output$hist <- renderPlot(
-                     tidy_df %>% 
-                       ggplot() +
-                       geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
-                       theme_light()
-                   )
-                   
-                   output$pnl <- renderPlot({
-                     pnl <- REACT$summary
-                     pnl[,"is.profit"] <- ifelse(pnl$PNL >= 0, "Profit", "Loss")
-                     
-                     pnl %>% 
-                       ggplot() +
-                       geom_col(aes(x=Year, y=PNL, fill=is.profit), position=position_dodge()) +
-                       scale_fill_manual(values = list("Profit" = "springgreen3", "Loss" = "brown1"), ) + 
-                       theme_light()
-                   })
-                   
-                   output$asset <- renderPlot({
-                     asset <- REACT$summary
-                     
-                     asset %>% 
-                       ggplot() +
-                       geom_col(aes(x=Year, y=buy_qnt), position=position_dodge()) +
-                       theme_light()
-                   })
+   output$asset <- renderPlot({
+     updateSimulation()
+     
+     asset <- REACT$summary
+     
+     asset %>% 
+       ggplot() +
+       geom_col(aes(x=Year, y=buy_qnt), position=position_dodge()) +
+       theme_light()
+   })
                    
 
-                   output$end_plot <- renderPlot(
+output$end_plot <- renderPlot(
                      {
                        updateSimulation()
                        
@@ -324,12 +326,8 @@ server <- function(input, output) {
                                legend.position= "none")
                    })
                    
-                   output$table <- renderDataTable(
-                     REACT$summary
-                   )
+   output$table <- renderDataTable(
+     REACT$summary
+   )
                    
-                 }
-  )
-  
-
 }
