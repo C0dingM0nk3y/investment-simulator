@@ -292,10 +292,6 @@ server <- function(input, output) {
                            end_df
                            }) 
                        
-                       output$endopoints2 <- renderTable(align = "r", #render table
-                                                        rownames = TRUE, colnames = TRUE,
-                                                        end_df) 
-                       
                        end_plot <- data.frame(
                          Total = factor(c("Invested", "Value", "Returns (PNL)"), 
                                         levels = c("Invested", "Value", "Returns (PNL)")), #to ensure correct order in plot legend
@@ -311,8 +307,8 @@ server <- function(input, output) {
                          geom_text(aes(x=Total, 
                                        #y=Value + max(Value/20), #calculate max value then /20 = 5% of plot size 
                                        y=Value*0.5, # middle of bar 
-                                       label=format(Value, big.mark=".") %>% paste("$")),
-                                  size=10
+                                       label=format(Value, big.mark=".", decimal.mark=",") %>% paste("$")),
+                                  size=5
                                    ) +
                          theme_classic(base_size = 16) +
                          theme(axis.title.x = element_blank(), axis.text.x = element_text(face="bold"),

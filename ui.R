@@ -90,28 +90,12 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   
   hr(),
   
-      fluidRow(align="center",
+      sidebarLayout(
 
-               column(4, #offset = 1,
-                      h3("1. Find Yahoo Finance tracker"),
-                      
-                      # split columns in 2 parts (to align search box to search button)
-                      fluidRow(
-                        column(6, offset=2, textInput("symbol", label="Yahoo Tracker Name", value = "SPY",  width = "100%",
-                                                  placeholder = "Symbol Name"),),
-                        column(3, align="left", br(), #h3() is empty, as spacer 
-                               actionButton("symbolsubmit", label = "Search", width = "100%"),
-                      ),
-                      ),
-                      
-                      p("Use",
-                        a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
-                        "to find a list of all the supported investments"),
-                      p("Retrieve the correct",code("Symbol name"), "from Yahoo website"),
-                      hr(),
-                      strong("Examples of common investments:"), br(),
+               sidebarPanel(align="center", width = 3, #offset = 1,
+                      h4("Examples of common investments:"),
                       #div(style="background:white; color:black; font-size:75%; width:70%",
-                      div(style="font-size:75%; width:70%",
+                      div(align="left", style="font-size:80%; width:100%",
                         em(
                         strong("^GSPC"), "=  S&P500 (Index)",br(),
                         strong("^IXIC"), "=  NASDAQ (Index)",br(),
@@ -128,87 +112,91 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                         strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
                         )
                         ),
-                  
-                      
                ),
-               column(4, #offset = 1,
-                  
-                      h3("2. Investment Start Date"),
-                      plotOutput("market", height = "150px", width = "90%"),
-                      uiOutput("ui_startDate"),
-                      p("Investment duration:", strong(textOutput("duration", inline = T))),
-                      hr(),
-                      
-                      # split columns in 2 parts (to align search box to search button)
-                      h3("3. Investment Amount"),
-                      fluidRow(
-                        column(6, 
-                               numericInput("monthly_inv",
-                                            "Monthly Investment:",
-                                            value = 100, min = 0, step = 100),
-                               checkboxInput("infl_correction",
-                                             span("Correct for inflation?*", style="color:orange"), value = FALSE),
-                               ),
-                        column(6, align="left", br(), 
-                               p(style="color:orange", br(),
-                                 em("*Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation."))
-                        ),
-                      ),
-                      
-                ),
-               
-               column(4, #offset = 1,
-                      h3("4. Start Simulation"),
-                      #h4("Investment Parameters"),
-                      tableOutput("settings"),
-                      hr(),
-                      hr(),
-                      #h4("Results"),
-                      #tableOutput("endopoints"),
-               ),
+        
+               mainPanel(width = 9,
+                 fluidRow(align="center",
+                   column(6, #offset = 1,
+                          h3("1. Find Yahoo Finance tracker"),
+                          
+                          p("Use",
+                            a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
+                            "to find a list supported symbols names"),
+                          p("Retrieve the correct",code("Symbol name"), "from Yahoo website and paste it below:"),         
+                          
+                          # split columns in 2 parts (to align search box to search button)
+                          fluidRow(
+                            column(6, offset=2, textInput("symbol", label="", value = "SPY",  width = "100%",
+                                                          placeholder = "Symbol Name"),),
+                            column(3, align="left", br(), #h3() is empty, as spacer 
+                                   actionButton("symbolsubmit", label = "Search", width = "100%"),
+                            ),
+                          ),
+                          
+                          hr(),
+                          
+                          # split columns in 2 parts (to align search box to search button)
+                          h3("2. Investment Amount"),
+                                   
+                          numericInput("monthly_inv",
+                                      "Monthly Investment:",
+                                      value = 100, min = 0, step = 100),
+                                                    
+                          ), 
+                   column(6, #offset = 1,
+                          
+                          h3("3. Investment Start Date"),
+                          plotOutput("market", height = "150px", width = "90%"),
+                          uiOutput("ui_startDate"),
+                          p("Investment duration:", strong(textOutput("duration", inline = T))),
+                          hr(),
+                          h3("4. Inflation Correction"),
+                          div(style="width:75%",
+                           em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
+                          checkboxInput("infl_correction",
+                                        span("Apply Inflation Correction?", style="color:orange"), value = FALSE),
+                   ),
+                 ),
+               ),   
       ),
 
   hr(),
   
-  h1("Plots [To be finished]"),
-  
   sidebarLayout(
     sidebarPanel(align="center",
-      h3("Input Data"),
-      tableOutput("endopoints"),
-    ),
-    mainPanel(
-      fluidRow(align="center",
-               column(12,
-                      p("TEMP"),
-               ),
+      h3("Simulation Data"),
+      hr(),
+      tableOutput("settings"),
       ),
-               
+
+    mainPanel(
       fluidRow(align="center",
                column(6,
                       h3("Results:", actionButton("runAnalysis", strong("Click to Refresh"), inline=TRUE)),
                       hr(),
-                      tableOutput("endopoints2"),
+                      tableOutput("endopoints"),
                ),
                column(6,
-                      plotOutput("end_plot"),
+                      plotOutput("end_plot", height = "300px", width = "90%"),
                ),
       ),
     ),
   ),
+    
+    
+  hr(),
+  h1("Investment breakdown [WIP: Aesthetics will be fixed soon]"),
   
-  
-  sidebarLayout(#theme = shinytheme("darkly"),
+  sidebarLayout(
       sidebarPanel(
         h4("Comparison: invested vs. value"),
-           #tableOutput("endopoints"),
       ),
       mainPanel(
         plotOutput("hist"),
       )
     ),
   
-  sidebarLayout(#theme = shinytheme("darkly"),
+  sidebarLayout(
     sidebarPanel(
       h4("Profit and Losses (PNL)"),
     ),
@@ -217,8 +205,11 @@ ui <- fluidPage(theme = shinytheme("darkly"),
     )
   ),
   
-  sidebarLayout(sidebarPanel( h4("Other PLOTS"),),
-                mainPanel(plotOutput("asset"),
+  sidebarLayout(
+    sidebarPanel( 
+      h4("Asset Accumulation"),),
+    mainPanel(
+      plotOutput("asset"),
                           ),
   ),
   
@@ -226,6 +217,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   #    mainPanel(dataTableOutput("table"),),
   #  ),
   
+  ),
   ),
   
   # REBAL SIMULATOR ####
@@ -235,7 +227,6 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                           h2("[COMING SOON]"),
                            ),
                     ),
-  ),
   ),
   
   
