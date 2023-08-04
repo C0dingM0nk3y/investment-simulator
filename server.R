@@ -291,6 +291,10 @@ server <- function(input, output) {
                          rownames = TRUE, colnames = TRUE,
                          end_df) 
                        
+                       output$endopoints2 <- renderTable(align = "r", #render table
+                                                        rownames = TRUE, colnames = TRUE,
+                                                        end_df) 
+                       
                        end_plot <- data.frame(
                          Total = factor(c("Invested", "Value", "Returns"), 
                                         levels = c("Invested", "Value", "Returns")), #to ensure correct order in plot legend
