@@ -185,38 +185,23 @@ ui <- fluidPage(theme = shinytheme("darkly"),
     
     
   hr(),
-  h1("Investment breakdown [WIP: Aesthetics will be fixed soon]"),
+  div(align="center", 
+      h1("Investment breakdown"),
+      h4(style="color:blue", em("WIP: Aesthetics will be improved soon"),),),
   
-  sidebarLayout(
-      sidebarPanel(
-        h4("Comparison: invested vs. value"),
-      ),
-      mainPanel(
-        plotOutput("hist"),
-      )
-    ),
-  
-  sidebarLayout(
-    sidebarPanel(
-      h4("Profit and Losses (PNL)"),
-    ),
-    mainPanel(
-      plotOutput("pnl"),
-    )
-  ),
-  
-  sidebarLayout(
-    sidebarPanel( 
-      h4("Asset Accumulation"),),
-    mainPanel(
-      plotOutput("asset"),
-                          ),
-  ),
-  
-  #sidebarLayout(sidebarPanel( h4("FULL DATA"),),
-  #    mainPanel(dataTableOutput("table"),),
-  #  ),
-  
+  fluidRow(align="center",
+    column(4,
+           h4("Comparison: invested vs. value"),
+           plotOutput("hist", height = "300px"),
+           ),
+    column(4, style = 'border-left: 1px solid',
+           h4("Profit and Losses (PNL)"),
+           plotOutput("pnl", height = "300px"),
+           ),
+    column(4, style = 'border-left: 1px solid',
+           h4("Asset Accumulation"),
+           plotOutput("asset", height = "300px"),
+           ),
   ),
   ),
   
@@ -227,6 +212,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                           h2("[COMING SOON]"),
                            ),
                     ),
+  ),
   ),
   
   
@@ -239,8 +225,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
         ),
            
         p(em("*all it take is to do some reserch to select A DIVERSIFIED PANEL OF ASSETS that is matching with our financial goals, risk tolerance, and desire to impact future economy. This should be discussed with a financial advisor, to make sure to make sound choices. After that, it is enough to set-up a recurring transaction and... that is it, actually.")),
+        p("DCA are one of the most simple investment strategy and one that requires little maintenance, while still providing with a reasonably safe source of extra incomes.",
+          "Yet, few people use them. Mainly, becuase of their fear of losing money during hte (inevitable!) phases of drowdown. This this tool, I hope people will be able to play around, and discover themselves that not only the drowdown phases are a physiological part of the process, and should not be feared. But actually those are the phases where real gain are done",
+          "If you are new to investing, you can use this tool to:")
     ),
-  ),
-  
-  
-)
+    ),
+  )
