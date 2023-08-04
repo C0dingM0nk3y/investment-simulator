@@ -190,10 +190,10 @@ ui <- fluidPage(theme = shinytheme("darkly"),
     )
   ),
   
-  #sidebarLayout(sidebarPanel( h4("Other PLOTS"),),
-  #              mainPanel(plotOutput("asset"),
-  #                        plotOutput("end_plot"),),
-  #),
+  sidebarLayout(sidebarPanel( h4("Other PLOTS"),),
+                mainPanel(plotOutput("asset"),
+                          plotOutput("end_plot"),),
+  ),
   
   #sidebarLayout(sidebarPanel( h4("FULL DATA"),),
   #    mainPanel(dataTableOutput("table"),),
