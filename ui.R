@@ -59,8 +59,10 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                     
                     "Choose a ",textcol("Date in the past")," and an ",textcol("Amount to invest"),".",br(),
                     
-                    "The script will use historical price data, to simulate a purchase", 
-                    textcol("exactly every 30 days(*)", color = "orange"), u("[independently of the market price/trends]"),),
+                    "The script will use historical price data, to simulate a", 
+                    textcol("purchase exactly every 30 days"), 
+                    textcol(color="orange", em("_independently of the market price/trends(*)_")),
+                    ),
                   
                   p(em("How much would you have earned if you did so?")),
                   br(),
@@ -90,7 +92,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                                   h3("1. Find Yahoo Finance tracker"),
                                   p("Refer to",
                                     a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
-                                    "to find the ",code("Symbol.name"), "for your investment of choice."),
+                                    "to find the ",code("Symbol.name"), "for the investment of your choice."),
                                   
                                   # split columns in 2 parts (to align search box to search button)
                                   fluidRow(
@@ -133,90 +135,45 @@ ui <- fluidPage(theme = shinytheme("darkly"),
              
   hr(),
   
-  sidebarLayout(
-           sidebarPanel(align="center", width = 3, #offset = 1,
-                  h4("Examples of common investments:"),
+   fluidRow(align="center",
+     column(4, #offset = 1,
+            h4("2. Investment Start Date"),
+            plotOutput("market", height = "150px", width = "90%"),
+            uiOutput("ui_startDate"),
+            p("Investment duration:", strong(textOutput("duration", inline = T))),
+            hr(),
+            numericInput("monthly_inv",
+                         h4("3. Monthly Investment"),
+                         value = 100, min = 0, step = 100),
+                                      
+            ), 
+     column(8, #offset = 1,
+            sidebarPanel(width=12,
+              h3("Simulation Results"),
+              hr(),
+              fluidRow(
+                column(6, 
+                       tableOutput("endopoints"),
+                       hr(),
+                       checkboxInput("infl_correction",
+                                     span("Correct for inflation?", style="color:orange"), value = FALSE),
+                       div(style="width:80%",
+                        em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
+                       ),
+                column(6,
+                       plotOutput("end_plot", height = "300px", width = "90%"),
+                       ),
+                
+              ),
+            ),
+            
+     ),
+   ),
 
-                  #div(style="background:white; color:black; font-size:75%; width:70%",
-                  div(align="left", style="font-size:80%; width:100%",
-                    em(
-                    strong("^GSPC"), "=  S&P500 (Index)",br(),
-                    strong("^IXIC"), "=  NASDAQ (Index)",br(),
-                    strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
-                    strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
-                    strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),br(),
-                    strong("SPY"), "=  S&P500 Index Tracker (ETF)",br(),
-                    strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
-                    strong("EEM"), "=  Emerging Markets (ETF)",br(),
-                    strong("EWI"), "=  Italian Market (ETF)",br(),br(),
-                    strong("GOOG"), "=  Google (Stock)",br(),
-                    strong("AAPL"), "=  Apple (Stock)",br(),br(),
-                    strong("BTC-USD"), "=  Bitcoin (Crypto)",br(),
-                    strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
-                    )
-                    ),
-           ),
-    
-           mainPanel(width = 9,
-             fluidRow(align="center",
-               column(6, #offset = 1,
-                      
-                      
-                      hr(),
-                      
-                      # split columns in 2 parts (to align search box to search button)
-                      h3("2. Investment Amount"),
-                               
-                      numericInput("monthly_inv",
-                                  "Monthly Investment:",
-                                  value = 100, min = 0, step = 100),
-                                                
-                      ), 
-               column(6, #offset = 1,
-                      
-                      h3("3. Investment Start Date"),
-                      plotOutput("market", height = "150px", width = "90%"),
-                      uiOutput("ui_startDate"),
-                      p("Investment duration:", strong(textOutput("duration", inline = T))),
-                      hr(),
-                      h3("4. Inflation Correction"),
-                      div(style="width:75%",
-                       em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
-                      checkboxInput("infl_correction",
-                                    span("Apply Inflation Correction?", style="color:orange"), value = FALSE),
-               ),
-             ),
-           ),   
-  ),
-
-  hr(),
-  
-  sidebarLayout(
-    sidebarPanel(align="center",
-      h3("Simulation Data"),
-      hr(),
-      tableOutput("settings"),
-      ),
-
-    mainPanel(
-      fluidRow(align="center",
-               column(6,
-                      h3("Results:", actionButton("runAnalysis", strong("Click to Refresh"), inline=TRUE)),
-                      hr(),
-                      tableOutput("endopoints"),
-               ),
-               column(6,
-                      plotOutput("end_plot", height = "300px", width = "90%"),
-               ),
-      ),
-    ),
-  ),
-    
-    
   hr(),
   div(align="center", 
       h1("Investment breakdown"),
-      h4(style="color:blue", em("WIP: Aesthetics will be improved soon"),),),
+      h4(style="color:orange", em("WIP: A mode detailed description of those plots will follow soon"),),),
   
   fluidRow(align="center",
     column(4,
@@ -231,6 +188,22 @@ ui <- fluidPage(theme = shinytheme("darkly"),
            h4("Asset Accumulation (for each year)"),
            plotOutput("asset", height = "300px"),
            ),
+  ),
+  hr(),
+  
+  sidebarLayout(
+    sidebarPanel(
+      h3("What is Dollar Cost Averaging?"), 
+    ),
+    mainPanel(width=7,
+              p(strong("Dollar Cost Averaging (DCA) -"), 
+                a(href="https://en.wikipedia.org/wiki/Dollar_cost_averaging", "link to wikipedia"),
+                br(),
+                "DCA refers to the practice of purchasing a ",strong("fixed value"), "of a asset at a", strong("specific interval of time"), "and", strong("regardless of current market price"), br(),
+                em("For example, a simple DCA strategy may be to buy 100€ worth of an ETF tracking the S&P500 index every 30 days. This is the defoult setting for this web-tool."),
+              ),
+              p("DCA is one of the simpler-yet-effective LONG-TERM investment strategy. As there is ", u("no attempt to time the market"), "this strategy can be completely passive, and there is no need for the investor to costantly be updated on current market situation. By splitting the investment into many small instances, the investor is buying the asset on an average price, and minimizing the effect of market volatility. While there may be time at which the investment will seem to be in loss, keep buying at a discounted price will ensure an even higher profit on the subsequent expansion phase f the market."),
+    ),
   ),
   
   #dataTableOutput("table")
@@ -248,39 +221,18 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   # TEXT REPOSITORY ####
   tabPanel(title=strong("About this Project"),
            
-           sidebarLayout(
-             sidebarPanel(align = "right", 
-                       h3("Project Aim"),
-             ),
-             mainPanel(align= "center", width = 7, 
-                       p("The aim of this tool is to show to the younger investors that", 
-                         textcol("there no need to fear the cyclical downtrends of the market"), 
-                         "as on the long run (>15 years and above),", 
-                         textcol("the enduring investors are always rewarded."), 
-                         em("And the earleier they started, the higher the returns!")),
-                       p("It also aims to show how, with", u(strong("simple but strict rules,")), "it is possible to build a strategy that will produce substantial profits, without any need to track the market, or dedicate any time to it"),
-             ),
-           ),
-           hr(),
-           
-           
-           sidebarLayout(
-             sidebarPanel("Intro"),
-             mainPanel(align = "center",
-                p("This small project came from the desire to help people understanding better why it is important to invest their money and why -despite there are some risks associated to investing- sticking to healthy investment strategies (like a simple DCA, see below), often produce a safe and reliable results despite requiring so little effort*, that even a simple computer program may take advantage of it."),
-                p(em(
-                  "Many people say to invest early and benefit long term.",br(),
-                  "Yet many others seem to have lost so much with their invesments, and they regret they have taken that decision.",br(),
-                  "Who to trust, then?"),
-                  p("As a Data Scientist, I invite you ", u("to trust no one"), ".", br(), 
-                    "Instead, have a look at what the data suggest, and draw your own conclusions."),),
+             sidebarPanel(align = "center", width=12,
+                       p(em(
+                          "Many people say to invest early and benefit long term.",br(),
+                          "Yet many others seem to have lost so much with their invesments, and they regret they have taken that decision.",br(),
+                          "Who to trust, then?"),
+                        p("As a Data Scientist, I invite you ", u("to trust no one"), ".", br(), 
+                          "Instead, have a look at what the data suggest, and draw your own conclusions."),),
                 ),
-             ),
-           hr(),
+           
            sidebarLayout(
-             sidebarPanel(align= "center", width = 4,
-                       h2("Peep-talk"),
-                       p(em("preliminary release")),
+             sidebarPanel(width = 4,
+                       h4("Project Aim"),
              ),
              mainPanel(align = "center", width = 8,
                           p("I wrote this tool for those young/new investors who are worried to lose money because of market fluctuations, and therefore miss on precious opportunities to invest their money. Worse, they attempt to time the market(with little experience), growing anxious about thier choices and end up losing sleep and money through trading."),
@@ -290,22 +242,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
            
            sidebarLayout(
              sidebarPanel(
-               h3("What is Dollar Cost Averaging?"), 
-             ),
-             mainPanel(width=7,
-                       p(strong("Dollar Cost Averaging (DCA) -"), 
-                         a(href="https://en.wikipedia.org/wiki/Dollar_cost_averaging", "link to wikipedia"),
-                         br(),
-                         "DCA refers to the practice of purchasing a ",strong("fixed value"), "of a asset at a", strong("specific interval of time"), "and", strong("regardless of current market price"), br(),
-                         em("For example, a simple DCA strategy may be to buy 100€ worth of an ETF tracking the S&P500 index every 30 days. This is the defoult setting for this web-tool."),
-                       ),
-                       p("DCA is one of the simpler-yet-effective LONG-TERM investment strategy. As there is ", u("no attempt to time the market"), "this strategy can be completely passive, and there is no need for the investor to costantly be updated on current market situation. By splitting the investment into many small instances, the investor is buying the asset on an average price, and minimizing the effect of market volatility. While there may be time at which the investment will seem to be in loss, keep buying at a discounted price will ensure an even higher profit on the subsequent expansion phase f the market."),
-             ),
-           ),
-           hr(),
-           sidebarLayout(
-             sidebarPanel(
-               h3("How to use this tool?"), 
+               h4("About DCA"), 
              ),
              mainPanel(align="center", width=7,
                        p(strong("DCA are very easy to implement and mantain."), 
@@ -321,7 +258,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
            ),
            hr(),
            sidebarLayout(
-             sidebarPanel("Bottom Text"),
+             sidebarPanel(h4("About investing")),
              mainPanel(align = "center",
                         p("add this note somewhere: when used in combination with a ETF (aka, investing on the whole market at ONCE), DCA are one of the safest and more reliable sources of passive income.",
                           a(href="https://www.investopedia.com/terms/e/etf.asp", "(what is a ETF?)"),

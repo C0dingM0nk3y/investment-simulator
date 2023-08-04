@@ -241,7 +241,7 @@ server <- function(input, output) {
        scale_y_continuous(breaks = scales::breaks_width(50000), 
                           minor_breaks = scales::breaks_width(10000)) +
        theme_light(base_size = 14) +
-       theme(legend.position = "none") 
+       theme(legend.position = "right") 
    })
                    
    output$pnl <- renderPlot({
