@@ -123,7 +123,9 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                         strong("EEM"), "=  Emerging Markets (ETF)",br(),
                         strong("EWI"), "=  Italian Market (ETF)",br(),br(),
                         strong("GOOG"), "=  Google (Stock)",br(),
-                        strong("AAPL"), "=  Apple (Stock)",br(),
+                        strong("AAPL"), "=  Apple (Stock)",br(),br(),
+                        strong("BTC-USD"), "=  Bitcoin (Crypto)",br(),
+                        strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
                         )
                         ),
                   

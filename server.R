@@ -32,6 +32,7 @@ server <- function(input, output) {
     df <- data.frame(xts) #converts from xts object to standard df
     colnames(df) %<>% str_remove(symbol)  %>% #remove symbol names
       str_remove(".")
+    df %<>% drop_na() #filters out missing val
     
     df[,"Price_AVG"] <- (df$Open + df$Close)/2 # average price (mean of OPEN and CLOSE price)
     df[,"Price_Adj"] <- with(df, Adjusted)
@@ -126,7 +127,7 @@ server <- function(input, output) {
     {
       #from inputs data
       set_df <- data.frame(Value = input$symbol, row.names = "Investment Name")
-      set_df["Start Date", 1] <- input$startdate %>% as.Date() %>% as.character()
+      set_df["Start Date", 1] <- input$startdate %>% as.Date() %>% as.character() #currently causing error message
       set_df["Total Duration", 1] <- REACT$duration %>% paste("years")
       set_df["Monthly Investment", 1] <- paste0(input$monthly_inv, "$")
       set_df["Inflation Correction", 1] <- input$infl_correction
@@ -271,18 +272,23 @@ server <- function(input, output) {
                      {
                        #from df_last
                        end_df <- data.frame()
-                       end_df["Total Invested ($)", 1] <- df_last[1, "cum_Invested", drop=T]
-                       end_df["Total Value ($)", 1] <- df_last[1, "cum_Value"]
-                       end_df["Total Return ($)", 1] <-df_last[1, "PNL"]
-                       end_df["Total Return (%)", 1] <-df_last[1, "ROI%"]*100
-                       end_df["Yearly Return (%)", 1] <- 100*df_last[1, "ROI%", drop=T]/duration
+                       end_df["Invested", 1] <- df_last[1, "cum_Invested", drop=T]
+                       end_df["Value", 1] <- df_last[1, "cum_Value"]
+                       end_df["Return (PNL)", 1] <-df_last[1, "PNL"]
+                       end_df["Return (PNL)", 2] <-df_last[1, "ROI%"]*100
+                       end_df["Yearly Return", 2] <- 100*df_last[1, "ROI%", drop=T]/duration
                        
-                       end_df[,1] %<>% round(2) %>% 
+                       colnames(end_df) <- c("Total", "ROI %")
+                       
+                       # Text formatting (units)
+                       end_df[,1] %<>% round(0) %>% 
                          format(big.mark=".", decimal.mark = ",") %>%
-                         paste(c("$","$","$","%","%"))
+                         paste("$") %>% str_replace("NA .", "")
+                       
+                       end_df[,2] %<>% round(2) %>% paste("%") %>% str_replace("NA %", "")
                        
                        output$endopoints <- renderTable(align = "r", #render table
-                         rownames = TRUE, colnames = FALSE,
+                         rownames = TRUE, colnames = TRUE,
                          end_df) 
                        
                        end_plot <- data.frame(
