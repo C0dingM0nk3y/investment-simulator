@@ -162,16 +162,41 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                       #h4("Investment Parameters"),
                       tableOutput("settings"),
                       hr(),
-                      actionButton("runAnalysis", strong("Results/Refresh")),
                       hr(),
                       #h4("Results"),
-                      tableOutput("endopoints"),
+                      #tableOutput("endopoints"),
                ),
       ),
 
   hr(),
   
   h1("Plots [To be finished]"),
+  
+  sidebarLayout(
+    sidebarPanel(align="center",
+      h3("Input Data"),
+      tableOutput("endopoints"),
+    ),
+    mainPanel(
+      fluidRow(align="center",
+               column(12,
+                      p("TEMP"),
+               ),
+      ),
+               
+      fluidRow(align="center",
+               column(6,
+                      h3("Results:", actionButton("runAnalysis", strong("Click to Refresh"), inline=TRUE)),
+                      hr(),
+                      tableOutput("endopoints2"),
+               ),
+               column(6,
+                      plotOutput("end_plot"),
+               ),
+      ),
+    ),
+  ),
+  
   
   sidebarLayout(#theme = shinytheme("darkly"),
       sidebarPanel(
@@ -194,7 +219,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   
   sidebarLayout(sidebarPanel( h4("Other PLOTS"),),
                 mainPanel(plotOutput("asset"),
-                          plotOutput("end_plot"),),
+                          ),
   ),
   
   #sidebarLayout(sidebarPanel( h4("FULL DATA"),),
