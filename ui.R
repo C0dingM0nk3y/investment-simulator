@@ -29,8 +29,6 @@ textcol <- function(text, color="#84b0fa"){ #quick formatting "#375a7f"
   return(underlinedText)
 }
 
-# 
-
 # UI ####
 ui <- fluidPage(theme = shinytheme("darkly"),
   title = "investment-simulator",
@@ -42,16 +40,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                 h2("investment-simulator_v0"),
                 p(em("preliminary release: 2023.08.05")),
                 hr(),
-                p("The aim of this tool is to show to the younger investors that", 
-                  textcol("there is no need to live bear market phases in paranoia"), 
-                  "as on the long run (>15 years and above),", 
-                  textcol("enduring investors are always rewarded."), 
-                  em("And the earleier they started, the higher the returns!")),
-                p("It also aims to show how, the combination of", u(strong("simple automated rules,")), 
-                  "and", u(strong("completely neglecting market prices and trends")), 
-                  "it is possible to build solid strategy that lead to ", u("substantial profits and zero stress")),
-                p("On the long run, the only varialble that ", u("really"), "makes the difference, is when you begun!") %>% 
-                  strong() %>%textcol(color="orange")
+                
                 ),
       sidebarPanel(align = "center", width = 5,
                   h4("How does it work?") %>% u(),
