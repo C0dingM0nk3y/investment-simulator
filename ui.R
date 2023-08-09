@@ -40,24 +40,25 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                 h2("investment-simulator_v0"),
                 p(em("preliminary release: 2023.08.05")),
                 hr(),
-                
+                h4("What does it do?") %>% u(),
+                p("This script use ",u("historical data"), "from different investments, to simulate the purchase of a ", u("fixed value"), "of the ", u("defined asset, every 30 days"), "starting from the", u("start date"), "until today(*)."),
+                br(),
+                p(textcol(color="orange", 
+                          em("*this strategy is called DCA. Scroll to the bottom to find a description and some references")),
+                  ),
                 ),
       sidebarPanel(align = "center", width = 5,
-                  h4("How does it work?") %>% u(),
-                  p("Choose ",textcol("One asset"),".",br(),
+                  h4("What to do?") %>% u(),
+                  p("Choose ",textcol("One asset"),", then hit 'Search'", br(),
                     
-                    "Choose a ",textcol("Date in the past")," and an ",textcol("Amount to invest"),".",br(),
+                    "Select a ",textcol("Date in the past")," and an ",textcol("Amount to invest"),".",br(),
                     
-                    "The script will use historical price data, to simulate a", 
-                    textcol("purchase exactly every 30 days"), 
-                    textcol(color="orange", em("_independently of the market price/trends(*)_")),
+                    textcol("Change the parameters dynamically"), "and test their influence on the final yield."
                     ),
                   
-                  p(em("How much would you have earned if you did so?")),
                   br(),
-                  textcol(color="orange", 
-                          em("*this strategy is called DCA. Scroll to the bottom to find a description and some references"))
-                 
+                  p(em("How much would you have earned if you did so?")),
+                  p(em("When was the best time to begin investing?")),
          ),
     ),
 
