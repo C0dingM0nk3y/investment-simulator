@@ -23,28 +23,28 @@ u <- function(text){ #quick formatting
   return(underlinedText)
 }
 
-textcol <- function(text, color="#84b0fa"){ #quick formatting "#375a7f"
+text_col <- function(text, color="#84b0fa"){ #quick formatting "#375a7f"
   underlinedText <- span(style=paste0("color:",color),
                          text)
   return(underlinedText)
 }
 
-code_col <- function(text, txt_col="#FFFFFF", bg_color="#FFFFFF47"){ #quick formatting "#375a7f"
-  formatted <- code(style=paste0("color:", txt_col, ";background-color:",bg_color),
+code_col <- function(text, text_col="#FFFFFF", bg_color="#FFFFFF47"){ #quick formatting "#375a7f"
+  formatted <- code(style=paste0("color:", text_col, ";background-color:",bg_color),
                          text)
   return(formatted)
 }
 
-span_col <- function(text, txt_col="#FFFFFF", bg_color="orange"){ #quick formatting "#375a7f"
-  formatted <- span(style=paste0("color:", txt_col, 
+span_col <- function(text, text_col="#FFFFFF", bg_color="orange"){ #quick formatting "#375a7f"
+  formatted <- span(style=paste0("color:", text_col, 
                                  ";background-color:",bg_color,
                                  ";border-radius:4px;padding:2px 4px;font-size:90%"),
                     text)
   return(formatted)
 }
 
-sstrong <- function(text, txt_col="orange"){ #quick formatting "#375a7f"
-  formatted <- strong(style=paste0("color:", txt_col, 
+sstrong <- function(text, text_col="orange"){ #quick formatting "#375a7f"
+  formatted <- strong(style=paste0("color:", text_col, 
                                  ";font-size:110%"),
                     text)
   return(formatted)
@@ -59,14 +59,23 @@ labelSuppress <- function(element_id){
   )
 }
 
+styleEdit <- function(style_element, text){
+  tags$style(
+    paste0(style_element,"{",text,"}")
+  )
+}
 
 # UI ####
-ui <- fluidPage(theme = shinytheme("darkly"),
-  title = "investment-simulator",
+ui <- fluidPage(theme = shinytheme("superhero"),
+  # STYLE FUNCTIONS ####
+  labelSuppress("symbol"),
+  styleEdit("h4", "margin-top:0px"),
+  styleEdit("#infl_correction", "font-size:110%"),
   
-  # HREF ####
-  br(), #black line on top
   # TITLE ####
+  title = "investment-simulator",
+  br(), #black line on top
+  
     sidebarLayout(
       mainPanel(align= "center", width = 4, 
                 hr(),
@@ -78,14 +87,14 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                #h4("What does it do?") %>% u(),
                p("This script use ",u("historical data"), "from different investments, to simulate the purchase of a ", u("fixed value"), "of the ", u("defined asset, every 30 days"), "starting from the", u("start date"), "until today(*)."),
                br(),
-               p(textcol(color="orange", 
+               p(text_col(color="orange", 
                          em("*this strategy is called DCA. Scroll to the bottom to find a description and some references")),
                ),                  
          ),
     ),
 
   # NAVBAR ####
-  navbarPage(theme = shinytheme("darkly"),
+  navbarPage(theme = shinytheme("superhero"),
     title = "Select one Investment Strategy:",
     
     # DCA SIMULATOR ####
@@ -99,13 +108,14 @@ ui <- fluidPage(theme = shinytheme("darkly"),
        #>> LEFT SECTION - Instructions ####
        column(width = 3, align="center",
           h4("How to use this tool?") %>% u(),
-          p("Choose ",sstrong("One asset (1)"),", then hit ",code_col('Search'), br(),
+          p(align="left", style="margin-left:10px",
+            sstrong("1. Choose one asset"), br(),
+            sstrong("2. Set Amount to invest")," and", sstrong("inflation correction"), br(),
+            sstrong("3. Select a Date in the past"),".",br(),
             
-            "Select a ",sstrong("Amount to invest (2)")," and an ",sstrong("Date in the past (3)"),".",br(),
-            
-            sstrong("Change the parameters dynamically"), "and test their influence on the final yield."
           ),
-          
+          p("all paramenters can be ", text_col("changed dynamically", col="#84b0fa"),
+            "to test their influence on the final outcome."),
           br(),
           p(em("How much would you have earned if you did so?")),
           p(em("Was there a best time to begin investing?")),
@@ -114,7 +124,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
           div( # separate box
             
             #div(style="background:white; color:black; font-size:75%; width:70%",
-            div(align="left", style="font-size:80%; width:100%; background-color: #FFFFFF47; padding:20px",
+            div(align="left", style="font-size:75%; width:100%; color:#000000; background-color: #FFFFFFb0; padding:20px",
                 h4(u("Common investments Symbols:"), align="center", style="margin-top:0px"),
                 p(style = "margin-left:10px", em(
                   strong("^GSPC"), "=  S&P500 (Index)",br(),
@@ -143,48 +153,62 @@ ui <- fluidPage(theme = shinytheme("darkly"),
           fluidRow(
              column(7, align="center",
                sidebarPanel(width=12, # INPUT BOX
-                  h3("1. Chose on Asset from",
+                  h4("1. Chose on Asset from", style="padding-top:0px",
                      a("Yahoo Finance", href="https://finance.yahoo.com/lookup/?guccounter=1"),),
                   
-                  p("Refer to Yahoo Finance Search Engine",
+                  h5(align="left", 
+                    "a. Browse Yahoo Finance Search Engine",
                     a("(link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
-                    "to find the correct", code_col("Symbol spelling"), "for the desired investment", ),
+                    "to find the correct", text_col("Symbol spelling"), "for the desired investment.", ),
+                  h5(align="left", 
+                     "b. Paste it below and hit", code_col('Search')),
                   
                   # split columns in 2 parts (to align search box to search button)
                   fluidRow(
-                    column(6, offset=2, 
-                           textInput("symbol", label="Paste it below and hit 'Search'", value = "SPY",  width = "100%",
+                    column(7, 
+                           textInput("symbol", label="", value = "SPY",  width = "100%",
                                                   placeholder = "Symbol Name"),),
-                    column(3, align="left", #h3() is empty, as spacer 
+                    column(5, align="left",
                            actionButton("symbolsubmit", label = "Search", width = "100%"),
                     ),
                   ),
-                  br(),
-                  p(style="font-size:75%", em("Note: some symbol names include special char. (e.g. ^ for ^GSPC)")),
+                  p(style="font-size:90%", em("Note: some symbol names may include special char.",br(),
+                  "(e.g. include ",code("^"), "for", code("^GSPC")),")"),
                   ),
              ),
-             column(5,
+             column(5, style="padding-left:0px;padding-right:0px",
                 sidebarPanel(width=12, # INPUT BOX
-                             numericInput("monthly_inv",
-                                          h4("3. Monthly Investment"),
-                                          value = 100, min = 0, step = 100),
+                             h4("2. Investment Amount"),
+                             # split columns in 2 parts (to align search box to search button)
+                             fluidRow(
+                               column(3, style="padding:0px",
+                                      align="right", h5("Buy")),
+                               column(5, numericInput("monthly_inv", width="100%", label=NULL,
+                                          value = 100, min = 0, step = 100)),
+                               column(4, style="padding:0px",
+                                      align="left", h5("$ every month")),
+                             ),
                 ),
                 sidebarPanel(width=12, # INPUT BOX
-                             checkboxInput("infl_correction",
-                                           span("Correct for inflation?", style="color:orange"), value = FALSE),
-                             div(style="width:80%",
-                                 em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
+                             h4("3. Correct for inflation?"), #, style="color:orange"),
+                             checkboxInput("infl_correction", value = FALSE,
+                                           label = text_col("Tick to correct for inflation.")),
+                             div(style="width:90%;font-size:80%;margin:0px",
+                                 em("Purchasing power of $ was higher in the past then it is now.",)),
                 ), 
              ),
              ),
-          fluidRow(
+          column(12, style="padding-left:0px;padding-right:0px",
              sidebarPanel(width=12, # INPUT BOX
+                          style="padding:0px 10%",
                           h4("2. Investment Start Date"),
-                          plotOutput("market", height = "200px", width = "90%"),
-                          uiOutput("ui_startDate"),
+                          plotOutput("market", height = "200px"),
+                          div(style="padding-left:12%;padding-right:3%",
+                            uiOutput("ui_startDate"),
+                            ),
                           p("Investment duration:", strong(textOutput("duration", inline = T))),
-             )
-          )
+             ),
+          ),
            ),
           #>> RIGHT SECTION - Simulation ####
           column(width=3, align="center",
@@ -221,10 +245,10 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   hr(),
   
   sidebarLayout(
-    sidebarPanel(
+    sidebarPanel(style="margin:100px -70px 0px 70px; background-color:#FFFFF99",
       h3("What is Dollar Cost Averaging?"), 
     ),
-    mainPanel(width=7,
+    mainPanel(width=7, style="margin:50px 0; padding:5rem;padding-left:10rem;background-color:#FFFFFF45",
               p(strong("Dollar Cost Averaging (DCA) -"), 
                 a(href="https://en.wikipedia.org/wiki/Dollar_cost_averaging", "link to wikipedia"),
                 br(),
@@ -273,7 +297,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
              sidebarPanel(
                h4("About DCA"), 
              ),
-             mainPanel(align="center", width=7,
+             mainPanel(align="center", width=7, 
                        p(strong("DCA are very easy to implement and mantain."), 
                          "However, it is of foremost importance to", strong("carefully select the investment to which to commit to"), "and preferably do so ", u("with the assitance of a financial advisor"), "(of which, I am not)"),
                        p(strong("In fact, DCA are so simple that even a computer program can profit from using them!")),
@@ -288,7 +312,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
            hr(),
            sidebarLayout(
              sidebarPanel(h4("About investing")),
-             mainPanel(align = "center",
+             mainPanel(align = "center", 
                         p("add this note somewhere: when used in combination with a ETF (aka, investing on the whole market at ONCE), DCA are one of the safest and more reliable sources of passive income.",
                           a(href="https://www.investopedia.com/terms/e/etf.asp", "(what is a ETF?)"),
                         ),
@@ -297,7 +321,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                         p("DCA are one of the most simple investment strategy and one that requires little maintenance, while still providing with a reasonably safe source of extra incomes.",
                           "Yet, few people use them. Mainly, becuase of their fear of losing money during hte (inevitable!) phases of drowdown. This this tool, I hope people will be able to play around, and discover themselves that not only the drowdown phases are a physiological part of the process, and should not be feared. But actually those are the phases where real gain are done",
                           "If you are new to investing, you can use this tool to:")
-                 ),
+             ),
            ),
   ),
   ),
