@@ -195,9 +195,9 @@ server <- function(input, output) {
     
     # cumulative calc
     sum_df[,"cum_Invested"] <- cumsum(sum_df$buy_value)
-    sum_df[,"tot_Owned"] <- cumsum(sum_df$buy_qnt)
+    sum_df[,"tot_qnt"] <- cumsum(sum_df$buy_qnt)
     
-    sum_df[,"cum_Value"] <- with(sum_df, tot_Owned*Price)
+    sum_df[,"cum_Value"] <- with(sum_df, tot_qnt*Price)
     
     # ROI
     sum_df[,"PNL"] <- with(sum_df, cum_Value-cum_Invested)
@@ -234,15 +234,15 @@ server <- function(input, output) {
    output$yearly <- renderPlot({
      updateSimulation()
      
-     tidy_df <- pivot_longer(REACT$summary, 
-                             cols=starts_with("buy_"), values_to = "Buy",
-                             names_to = "BuyData", names_prefix = "buy_") 
-     tidy_df %>% 
+     REACT$summary %>% 
        ggplot() +
-       geom_col(aes(x=Year, y=Buy, fill=BuyData), position=position_dodge()) +
-       scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
-       scale_y_continuous(breaks = scales::breaks_width(50000), 
-                          minor_breaks = scales::breaks_width(10000)) +
+       geom_col(aes(x=Year, y=tot_qnt, fill="Total Qnt"), position=position_identity()) +
+       geom_col(aes(x=Year, y=buy_qnt, fill="Added Qnt"), position=position_identity()) +
+       #scale_fill_manual(values = c("Total Qnt" = "orange", "Added Qnt" = "#619CFF")) +
+       geom_line(aes(x=Year, 
+                     y=Price/max(Price)*max(tot_qnt), color="Price")) + #scale to show on same scale
+       scale_color_manual(values="red") +
+       ylab("Shares Qnt") +
        theme_light(base_size = 14) +
        theme(legend.position = "right") 
    })
