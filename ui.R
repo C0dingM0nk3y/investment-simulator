@@ -24,9 +24,9 @@ u <- function(text){ #quick formatting
 }
 
 text_col <- function(text, color="#84b0fa"){ #quick formatting "#375a7f"
-  underlinedText <- span(style=paste0("color:",color),
+  formatted <- span(style=paste0("color:",color),
                          text)
-  return(underlinedText)
+  return(formatted)
 }
 
 code_col <- function(text, text_col="#FFFFFF", bg_color="#FFFFFF47"){ #quick formatting "#375a7f"
@@ -210,13 +210,15 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                           p("Investment duration:", strong(textOutput("duration", inline = T))),
              ),
           ),
-           ),
+          ),
           #>> RIGHT SECTION - Simulation ####
           column(width=3, align="center", style="background:#FFFFFF;color:black",
            fluidRow(align="center",
                column(12, #offset = 1,
                       h3("Simulation Results"),
-                      p("ADD TEXT"),
+                      h5(strong("Strategy:"), align="left",),
+                      htmlOutput("settings_text"),
+                      hr(),
                       div(style="background:#f7972055",
                         tableOutput("endopoints")),
                       hr(),

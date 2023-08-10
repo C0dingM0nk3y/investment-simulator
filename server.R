@@ -122,6 +122,7 @@ server <- function(input, output) {
     REACT$duration_n %>% paste("years")
   )
   
+  # CAN BE REMOVED - NOT USED ANYMORE
   output$settings <- renderTable(align = "r",
     rownames = TRUE, colnames = FALSE,
     {
@@ -137,6 +138,13 @@ server <- function(input, output) {
       set_df["Inflation Correction", 1] <- input$infl_correction
       set_df
     })
+  
+  # ENDPOINT: TEXT
+  output$settings_text <- renderText({
+     sprintf("Buy %s$ worth of %s every 30days, <br> from %s to %s (%s)",
+             strong(input$monthly_inv, "$"), strong(input$symbol), 
+             text_col(input$startdate), today(), text_col(REACT$duration_n, "years"))
+     }) 
   
   # SIMULATION and ANALYSIS ####
   
@@ -317,6 +325,7 @@ output$end_plot <- renderPlot(
                        
                        colnames(end_df) <- c("Total", "ROI %")
                        
+                       # ENDPOINT: TABLE
                        output$endopoints <- renderTable(align = "r", #render table
                          rownames = TRUE, colnames = TRUE,
                          {
@@ -329,6 +338,7 @@ output$end_plot <- renderPlot(
                            end_df
                            }) 
                        
+                       # ENDPOINT: PLOT
                        end_plot <- data.frame(
                          Total = factor(c("Invested", "Value", "Returns (PNL)"), 
                                         levels = c("Invested", "Value", "Returns (PNL)")), #to ensure correct order in plot legend
