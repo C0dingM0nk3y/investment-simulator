@@ -107,7 +107,7 @@ server <- function(input, output) {
                updateSimulation()
   )
   
-  # OUTPUT: TEXT (Investment Duration)
+  # OUTPUT: TEXT ####
   output$duration <- renderText(
     REACT$duration_n %>% paste("years")
   )
@@ -131,10 +131,15 @@ server <- function(input, output) {
   
   # ENDPOINT: TEXT
   output$strategy <- renderText({
-     sprintf("Buy %s$ worth of %s every 30days, <br> from %s to %s (%s)",
-             strong(input$monthly_inv, "$"), strong(input$symbol), 
-             text_col(input$startdate), today(), text_col(REACT$duration_n, "years"))
+     sprintf("Buy %s worth of %s <u>every 30 days</u>, <br> from %s to %s %s",
+             sstrong(paste0(input$monthly_inv, "$")), sstrong(input$symbol), 
+             sstrong(input$startdate), today(), sstrong(paste0("(",REACT$duration_n, "years)")))
      }) 
+  
+  output$apy <- renderText({
+    last_df <- REACT$summary %>% tail(1)
+    round(last_df[1, "ROI%",drop=T]/REACT$duration_n*100,2)
+  })
   
   # SIMULATION and ANALYSIS ####
   
@@ -234,7 +239,7 @@ server <- function(input, output) {
                              names_to = "BuyData", names_prefix = "buy_") 
      tidy_df %>% 
        ggplot() +
-       geom_col(aes(x=Year, y=buy_value, fill=BuyData), position=position_dodge()) +
+       geom_col(aes(x=Year, y=Buy, fill=BuyData), position=position_dodge()) +
        scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
        scale_y_continuous(breaks = scales::breaks_width(50000), 
                           minor_breaks = scales::breaks_width(10000)) +
@@ -310,20 +315,19 @@ output$end_plot <- renderPlot(
                        end_df["Invested", 1] <- df_last[1, "cum_Invested", drop=T] %>% round(0)
                        end_df["Value", 1] <- df_last[1, "cum_Value"] %>% round(0)
                        end_df["Returns (PNL)", 1] <-df_last[1, "PNL"] %>% round(0)
-                       end_df["Returns (PNL)", 2] <-df_last[1, "ROI%"]*100
-                       end_df["Yearly Return", 2] <- 100*df_last[1, "ROI%", drop=T]/duration
+                       end_df["Returns (%)", 1] <- round(df_last[1, "ROI%"]*100,1)
                        
-                       colnames(end_df) <- c("Total", "ROI %")
+                       colnames(end_df) <- c("Simulated Data")
                        
                        # ENDPOINT: TABLE
                        output$endopoints <- renderTable(align = "r", #render table
                          rownames = TRUE, colnames = TRUE,
                          {
                            # Text formatting (units)
-                           end_df[,1] %<>% format(big.mark=".", decimal.mark = ",") %>%
+                           end_df[1:3,1] %<>% format(big.mark=".", decimal.mark = ",") %>%
                              paste("$") %>% str_replace("NA .", "")
                            
-                           end_df[,2] %<>% round(2) %>% paste("%") %>% str_replace("NA %", "")
+                           end_df[4,1] %<>% paste("%") %>% str_replace("NA %", "")
                            
                            end_df
                            }) 
