@@ -230,38 +230,61 @@ server <- function(input, output) {
   observeEvent(input$symbolsubmit,
                {updateSimulation()})
        
-   # PLOTS AND TABLES ####                
-   output$yearly <- renderPlot({
+  # PLOTS AND TABLES ####
+  # > Yearly Accumulation ####
+   output$dca_qnt <- renderPlot({
      updateSimulation()
      
      REACT$summary %>% 
        ggplot() +
-       geom_col(aes(x=Year, y=tot_qnt, fill="Total Qnt"), position=position_identity()) +
-       geom_col(aes(x=Year, y=buy_qnt, fill="Added Qnt"), position=position_identity()) +
+       geom_col(aes(x=Year, y=tot_qnt, fill="Total"), position=position_identity()) +
+       geom_col(aes(x=Year, y=buy_qnt, fill="Each Year"), position=position_identity()) +
+       scale_y_log10(minor_breaks = scales::breaks_width(10))+
        #scale_fill_manual(values = c("Total Qnt" = "orange", "Added Qnt" = "#619CFF")) +
        geom_line(aes(x=Year, 
                      y=Price/max(Price)*max(tot_qnt), color="Price")) + #scale to show on same scale
        scale_color_manual(values="red") +
-       ylab("Shares Qnt") +
+       ylab("Shares Qnt (Log10)") +
+       ggtitle("Qnt of purchased asset (each year and total)") +
        theme_light(base_size = 14) +
-       theme(legend.position = "right") 
+       theme(legend.position = "right", 
+             plot.title=element_text(hjust=0.5, face="bold")) 
    })
   
-     output$hist <- renderPlot({
+  # > Yearly DCA ####
+     output$dca_val <- renderPlot({
        updateSimulation()
        
-       tidy_df <- pivot_longer(REACT$summary, 
-                               cols=starts_with("cum_"), values_to = "Value",
-                               names_to = "CumulData", names_prefix = "cum_") 
-       tidy_df %>% 
+       REACT$summary %>% 
          ggplot() +
-         geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
-         scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
-         scale_y_continuous(breaks = scales::breaks_width(50000), 
-                            minor_breaks = scales::breaks_width(10000)) +
+         geom_col(aes(x=Year, y=cum_Invested, fill="Total"), position=position_identity()) +
+         geom_col(aes(x=Year, y=buy_value, fill="Each Year"), position=position_identity()) +
+         scale_fill_manual(values = c("Each Year" = "orange", "Total" = "#619CFF")) +
+         scale_y_continuous(breaks = scales::breaks_width(5000), 
+                            minor_breaks = scales::breaks_width(1000)) +
+         ylab("Invested Value (Buy)") +
+         ggtitle("Amount of invested money (each year, and total)") +
          theme_light(base_size = 14) +
-         theme(legend.position = "right") 
+         theme(legend.position = "right",
+               plot.title=element_text(hjust=0.5, face="bold")) 
      })
+  
+  # OLD: REMOVE? ####
+  output$hist <- renderPlot({
+    updateSimulation()
+    
+    tidy_df <- pivot_longer(REACT$summary, 
+                            cols=starts_with("cum_"), values_to = "Value",
+                            names_to = "CumulData", names_prefix = "cum_") 
+    tidy_df %>% 
+      ggplot() +
+      geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
+      scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
+      scale_y_continuous(breaks = scales::breaks_width(50000), 
+                         minor_breaks = scales::breaks_width(10000)) +
+      theme_light(base_size = 14) +
+      theme(legend.position = "right") 
+  })
      
                    
    output$pnl <- renderPlot({
