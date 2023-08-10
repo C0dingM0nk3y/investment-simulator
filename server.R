@@ -1,14 +1,4 @@
-library(shiny)
-library(shinythemes)
-library(quantmod)
-library(magrittr)
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(lubridate)
-library(ggplot2)
-
-options(scipen = 99)
+source("_init.R")
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -140,7 +130,7 @@ server <- function(input, output) {
     })
   
   # ENDPOINT: TEXT
-  output$settings_text <- renderText({
+  output$strategy <- renderText({
      sprintf("Buy %s$ worth of %s every 30days, <br> from %s to %s (%s)",
              strong(input$monthly_inv, "$"), strong(input$symbol), 
              text_col(input$startdate), today(), text_col(REACT$duration_n, "years"))
