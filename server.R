@@ -69,7 +69,7 @@ server <- function(input, output) {
       divide_by(52) %>%
       floor()  %>% as.numeric()
     
-    sliderInput(inputId = "startdate", label="Select Start Date",
+    sliderInput(inputId = "startdate", label=NULL,
                 min = REACT$minDate, max=today()-366,
                 value= REACT$minDate)
     })
@@ -228,21 +228,38 @@ server <- function(input, output) {
                {updateSimulation()})
        
    # PLOTS AND TABLES ####                
-   output$hist <- renderPlot({
+   output$yearly <- renderPlot({
      updateSimulation()
      
      tidy_df <- pivot_longer(REACT$summary, 
-                             cols=starts_with("cum_"), values_to = "Value",
-                             names_to = "CumulData", names_prefix = "cum_") 
+                             cols=starts_with("buy_"), values_to = "Buy",
+                             names_to = "BuyData", names_prefix = "buy_") 
      tidy_df %>% 
        ggplot() +
-       geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
+       geom_col(aes(x=Year, y=buy_value, fill=BuyData), position=position_dodge()) +
        scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
        scale_y_continuous(breaks = scales::breaks_width(50000), 
                           minor_breaks = scales::breaks_width(10000)) +
        theme_light(base_size = 14) +
        theme(legend.position = "right") 
    })
+  
+     output$hist <- renderPlot({
+       updateSimulation()
+       
+       tidy_df <- pivot_longer(REACT$summary, 
+                               cols=starts_with("cum_"), values_to = "Value",
+                               names_to = "CumulData", names_prefix = "cum_") 
+       tidy_df %>% 
+         ggplot() +
+         geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
+         scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
+         scale_y_continuous(breaks = scales::breaks_width(50000), 
+                            minor_breaks = scales::breaks_width(10000)) +
+         theme_light(base_size = 14) +
+         theme(legend.position = "right") 
+     })
+     
                    
    output$pnl <- renderPlot({
      updateSimulation()
@@ -328,7 +345,7 @@ output$end_plot <- renderPlot(
                                        #y=Value + max(Value/20), #calculate max value then /20 = 5% of plot size 
                                        y=Value*0.5, # middle of bar 
                                        label=format(Value, big.mark=".", decimal.mark=",") %>% paste("$")),
-                                  size=5
+                                  size=4
                                    ) +
                          theme_classic(base_size = 16) +
                          theme(axis.title.x = element_blank(), axis.text.x = element_text(face="bold"),
