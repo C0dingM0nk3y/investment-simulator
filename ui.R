@@ -29,6 +29,30 @@ textcol <- function(text, color="#84b0fa"){ #quick formatting "#375a7f"
   return(underlinedText)
 }
 
+code_col <- function(text, txt_col="#FFFFFF", bg_color="#FFFFFF47"){ #quick formatting "#375a7f"
+  formatted <- code(style=paste0("color:", txt_col, ";background-color:",bg_color),
+                         text)
+  return(formatted)
+}
+
+span_col <- function(text, txt_col="#FFFFFF", bg_color="orange"){ #quick formatting "#375a7f"
+  formatted <- span(style=paste0("color:", txt_col, 
+                                 ";background-color:",bg_color,
+                                 ";border-radius:4px;padding:2px 4px;font-size:90%"),
+                    text)
+  return(formatted)
+}
+
+sstrong <- function(text, txt_col="orange"){ #quick formatting "#375a7f"
+  formatted <- strong(style=paste0("color:", txt_col, 
+                                 ";font-size:110%"),
+                    text)
+  return(formatted)
+}
+
+# HREF ####
+tags$link(rel = "stylesheet", type="text/css", href="customstyles.css")
+
 # UI ####
 ui <- fluidPage(theme = shinytheme("darkly"),
   title = "investment-simulator",
@@ -36,29 +60,19 @@ ui <- fluidPage(theme = shinytheme("darkly"),
   br(), #black line on top
   # TITLE ####
     sidebarLayout(
-      mainPanel(align= "center", width = 6, 
+      mainPanel(align= "center", width = 4, 
+                hr(),
                 h2("investment-simulator_v0"),
                 p(em("preliminary release: 2023.08.05")),
                 hr(),
-                h4("What does it do?") %>% u(),
-                p("This script use ",u("historical data"), "from different investments, to simulate the purchase of a ", u("fixed value"), "of the ", u("defined asset, every 30 days"), "starting from the", u("start date"), "until today(*)."),
-                br(),
-                p(textcol(color="orange", 
-                          em("*this strategy is called DCA. Scroll to the bottom to find a description and some references")),
-                  ),
                 ),
-      sidebarPanel(align = "center", width = 5,
-                  h4("What to do?") %>% u(),
-                  p("Choose ",textcol("One asset"),", then hit 'Search'", br(),
-                    
-                    "Select a ",textcol("Date in the past")," and an ",textcol("Amount to invest"),".",br(),
-                    
-                    textcol("Change the parameters dynamically"), "and test their influence on the final yield."
-                    ),
-                  
-                  br(),
-                  p(em("How much would you have earned if you did so?")),
-                  p(em("When was the best time to begin investing?")),
+      sidebarPanel(align = "center", width = 7,
+               #h4("What does it do?") %>% u(),
+               p("This script use ",u("historical data"), "from different investments, to simulate the purchase of a ", u("fixed value"), "of the ", u("defined asset, every 30 days"), "starting from the", u("start date"), "until today(*)."),
+               br(),
+               p(textcol(color="orange", 
+                         em("*this strategy is called DCA. Scroll to the bottom to find a description and some references")),
+               ),                  
          ),
     ),
 
@@ -69,96 +83,113 @@ ui <- fluidPage(theme = shinytheme("darkly"),
     # DCA SIMULATOR ####
     tabPanel(title=strong("DCA simulator"),
              
-             #> INTRO ####
-             sidebarLayout(
-               sidebarPanel(width = 3, align="center",
-                 h3("Chose on Asset from Yahoo Finance"),
-                 p("Historical data is extracted from ", a("Yahoo Finance", href="https://finance.yahoo.com/lookup/?guccounter=1"),),
-                 
-               ),
-               mainPanel(width=9,
-                         fluidRow(
-                           column(7, align="center",
-                                  h3("1. Find Yahoo Finance tracker"),
-                                  p("Refer to",
-                                    a("Yahoo Finance Search Engine (link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
-                                    "to find the ",code("Symbol.name"), "for the investment of your choice."),
-                                  
-                                  # split columns in 2 parts (to align search box to search button)
-                                  fluidRow(
-                                    column(6, offset=2, textInput("symbol", label="Paste it below and hit 'Search'", value = "SPY",  width = "100%",
-                                                                  placeholder = "Symbol Name"),),
-                                    column(3, align="left", br(), #h3() is empty, as spacer 
-                                           actionButton("symbolsubmit", label = "Search", width = "100%"),
-                                    ),
-                                  ),
-                                  br(),
-                                  p(em("1) some of Yahoo symbol names are different than those used elsewhere. Make sure to check the spelling on their website")),
-                                  p(em("2) some symbol names include special char. (e.g. ^ for ^GSPC)")),
-                                  ),
-                           
-                           column(5, align="center", style = 'border-left: 1px solid',
-                                 h4("Common investments Symbols:"),
-                                 
-                                 #div(style="background:white; color:black; font-size:75%; width:70%",
-                                 div(align="left", style="font-size:80%; width:100%",
-                                     em(
-                                       strong("^GSPC"), "=  S&P500 (Index)",br(),
-                                       strong("^IXIC"), "=  NASDAQ (Index)",br(),
-                                       strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
-                                       strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
-                                       strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),br(),
-                                       strong("SPY"), "=  S&P500 Index Tracker (ETF)",br(),
-                                       strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
-                                       strong("EEM"), "=  Emerging Markets (ETF)",br(),
-                                       strong("EWI"), "=  Italian Market (ETF)",br(),br(),
-                                       strong("GOOG"), "=  Google (Stock)",br(),
-                                       strong("AAPL"), "=  Apple (Stock)",br(),br(),
-                                       strong("BTC-USD"), "=  Bitcoin (Crypto)",br(),
-                                       strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
-                                     ),
-                                 ),
-                                 ),
-                           ),
-                         ),
-             ),
-             
-  hr(),
-  
-   fluidRow(align="center",
-     column(4, #offset = 1,
-            h4("2. Investment Start Date"),
-            plotOutput("market", height = "150px", width = "90%"),
-            uiOutput("ui_startDate"),
-            p("Investment duration:", strong(textOutput("duration", inline = T))),
-            hr(),
-            numericInput("monthly_inv",
-                         h4("3. Monthly Investment"),
-                         value = 100, min = 0, step = 100),
-                                      
-            ), 
-     column(8, #offset = 1,
-            sidebarPanel(width=12,
-              h3("Simulation Results"),
-              hr(),
-              fluidRow(
-                column(6, 
-                       tableOutput("endopoints"),
-                       hr(),
-                       checkboxInput("infl_correction",
-                                     span("Correct for inflation?", style="color:orange"), value = FALSE),
-                       div(style="width:80%",
-                        em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
-                       ),
-                column(6,
-                       plotOutput("end_plot", height = "300px", width = "90%"),
-                       ),
-                
-              ),
-            ),
+     #> PARAMETER SETTING ####
+     ## fluidRow() layout, desined to occupy 2 rows on computer (2 x 12 width = 24)
+     ## Use gray backgroun for input, and black for results. 
+     fluidRow(
+       
+       #>> LEFT SECTION - Instructions ####
+       column(width = 3, align="center",
+          h4("How to use this tool?") %>% u(),
+          p("Choose ",sstrong("One asset (1)"),", then hit ",code_col('Search'), br(),
             
-     ),
-   ),
+            "Select a ",sstrong("Amount to invest (2)")," and an ",sstrong("Date in the past (3)"),".",br(),
+            
+            sstrong("Change the parameters dynamically"), "and test their influence on the final yield."
+          ),
+          
+          br(),
+          p(em("How much would you have earned if you did so?")),
+          p(em("Was there a best time to begin investing?")),
+          
+          hr(),
+          div( # separate box
+            
+            #div(style="background:white; color:black; font-size:75%; width:70%",
+            div(align="left", style="font-size:80%; width:100%; background-color: #FFFFFF47; padding:20px",
+                h4(u("Common investments Symbols:"), align="center", style="margin-top:0px"),
+                p(style = "margin-left:10px", em(
+                  strong("^GSPC"), "=  S&P500 (Index)",br(),
+                  strong("^IXIC"), "=  NASDAQ (Index)",br(),
+                  strong("^DJI"), "=  Dow Jones Industrial Average (Index)",br(),
+                  strong("^TNX"), "=  Treasury Yield 10 years (Index)",br(),
+                  strong("^ERIX"), "=  European Revewable Energy Total (Index)",br(),
+                  br(),
+                  strong("SPY"), "=  S&P500 Index Tracker (ETF)",br(),
+                  strong("VTI"), "=  Vangard Total Stock (ETF)",br(),
+                  strong("EEM"), "=  Emerging Markets (ETF)",br(),
+                  strong("EWI"), "=  Italian Market (ETF)",br(),
+                  br(),
+                  strong("GOOG"), "=  Google (Stock)",br(),
+                  strong("AAPL"), "=  Apple (Stock)",br(),
+                  br(),
+                  strong("BTC-USD"), "=  Bitcoin (Crypto)",br(),
+                  strong("ETH-USD"), "=  Ethereum (Crypto)",br(),
+                )),
+            ),
+          ),
+       ),
+
+       #>> INPUT: middle section ####
+      column(width=6, align="center",
+          fluidRow(
+             column(7, align="center",
+               sidebarPanel(width=12, # INPUT BOX
+                  h3("1. Chose on Asset from",
+                     a("Yahoo Finance", href="https://finance.yahoo.com/lookup/?guccounter=1"),),
+                  
+                  p("Refer to Yahoo Finance Search Engine",
+                    a("(link)", href="https://finance.yahoo.com/lookup/?guccounter=1"),
+                    "to find the correct", code_col("Symbol spelling"), "for the desired investment", ),
+                  
+                  # split columns in 2 parts (to align search box to search button)
+                  fluidRow(
+                    column(6, offset=2, 
+                           textInput("symbol", label="Paste it below and hit 'Search'", value = "SPY",  width = "100%",
+                                                  placeholder = "Symbol Name"),),
+                    column(3, align="left", br(), #h3() is empty, as spacer 
+                           actionButton("symbolsubmit", label = "Search", width = "100%"),
+                    ),
+                  ),
+                  br(),
+                  p(style="font-size:75%", em("Note: some symbol names include special char. (e.g. ^ for ^GSPC)")),
+                  ),
+             ),
+             column(5,
+                sidebarPanel(width=12, # INPUT BOX
+                             numericInput("monthly_inv",
+                                          h4("3. Monthly Investment"),
+                                          value = 100, min = 0, step = 100),
+                ),
+                sidebarPanel(width=12, # INPUT BOX
+                             checkboxInput("infl_correction",
+                                           span("Correct for inflation?", style="color:orange"), value = FALSE),
+                             div(style="width:80%",
+                                 em("Purchasing power of $ was higher in the past then it is now. Tick to correct for inflation.")),
+                ), 
+             ),
+             ),
+          fluidRow(
+             sidebarPanel(width=12, # INPUT BOX
+                          h4("2. Investment Start Date"),
+                          plotOutput("market", height = "200px", width = "90%"),
+                          uiOutput("ui_startDate"),
+                          p("Investment duration:", strong(textOutput("duration", inline = T))),
+             )
+          )
+           ),
+          #>> RIGHT SECTION - Simulation ####
+          column(width=3, align="center",
+           fluidRow(align="center",
+               column(12, #offset = 1,
+                      h3("Simulation Results"),
+                      tableOutput("endopoints"),
+                      hr(),
+                      plotOutput("end_plot", height = "350px", width = "90%"),
+               ),
+              ),
+             ),
+           ),
 
   hr(),
   div(align="center", 
