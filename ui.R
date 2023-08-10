@@ -50,13 +50,21 @@ sstrong <- function(text, txt_col="orange"){ #quick formatting "#375a7f"
   return(formatted)
 }
 
-# HREF ####
-tags$link(rel = "stylesheet", type="text/css", href="customstyles.css")
+#suppress label from shiny elements
+labelSuppress <- function(element_id){
+  tags$style(
+    sprintf("#%s-label {
+      display: none;  
+    }", element_id)
+  )
+}
+
 
 # UI ####
 ui <- fluidPage(theme = shinytheme("darkly"),
   title = "investment-simulator",
   
+  # HREF ####
   br(), #black line on top
   # TITLE ####
     sidebarLayout(
@@ -147,7 +155,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                     column(6, offset=2, 
                            textInput("symbol", label="Paste it below and hit 'Search'", value = "SPY",  width = "100%",
                                                   placeholder = "Symbol Name"),),
-                    column(3, align="left", br(), #h3() is empty, as spacer 
+                    column(3, align="left", #h3() is empty, as spacer 
                            actionButton("symbolsubmit", label = "Search", width = "100%"),
                     ),
                   ),
