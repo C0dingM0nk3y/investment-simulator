@@ -163,7 +163,7 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                     
                  h3("Simulation Results"),
                  fluidRow(style="margin-bottom:-20px",
-                   column(3, align="right", style="padding-right:0",
+                   column(3, align="center", style="padding-right:0",
                     h4(strong("Selected Strategy:")),
                    ),
                    column(9, style="padding-right:25px",
