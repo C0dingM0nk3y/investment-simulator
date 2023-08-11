@@ -1,14 +1,4 @@
-library(shiny)
-library(shinythemes)
-library(quantmod)
-library(magrittr)
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(lubridate)
-library(ggplot2)
-
-options(scipen = 99)
+source("_init.R")
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -69,7 +59,7 @@ server <- function(input, output) {
       divide_by(52) %>%
       floor()  %>% as.numeric()
     
-    sliderInput(inputId = "startdate", label="Select Start Date",
+    sliderInput(inputId = "startdate", label=NULL,
                 min = REACT$minDate, max=today()-366,
                 value= REACT$minDate)
     })
@@ -88,7 +78,7 @@ server <- function(input, output) {
                label=paste("Start:",input$startdate), 
                hjust=0, fill="cornflowerblue", color="white",
                x=as.POSIXct(input$startdate+180), y=max(data$Price)*0.9) +
-      theme_classic(base_size = 12) +
+      theme_classic(base_size = 14) +
       theme(axis.title.x = element_blank(), legend.title = element_blank(), 
             plot.title=element_text(hjust=0.45, size = 16), #center(50%) and size of title
             #plot.title=element_text(size = 16), #center(40%) and bold title
@@ -117,11 +107,12 @@ server <- function(input, output) {
                updateSimulation()
   )
   
-  # OUTPUT: TEXT (Investment Duration)
+  # OUTPUT: TEXT ####
   output$duration <- renderText(
     REACT$duration_n %>% paste("years")
   )
   
+  # CAN BE REMOVED - NOT USED ANYMORE
   output$settings <- renderTable(align = "r",
     rownames = TRUE, colnames = FALSE,
     {
@@ -137,6 +128,23 @@ server <- function(input, output) {
       set_df["Inflation Correction", 1] <- input$infl_correction
       set_df
     })
+  
+  # ENDPOINT: TEXT
+  output$strategy <- renderText({
+     sprintf("Buy %s worth of %s <u>every 30 days</u>, <br> from %s to %s %s",
+             sstrong(paste0(input$monthly_inv, "$")), sstrong(input$symbol), 
+             sstrong(input$startdate), today(), sstrong(paste0("(",REACT$duration_n, "years)")))
+     }) 
+  
+  output$yield <- renderText({
+    last_df <- REACT$summary %>% tail(1)
+    round(last_df[1, "PNL",drop=T],0) %>% format(big.mark=".", decimal.mark=",")
+  })
+  
+  output$apy <- renderText({
+    last_df <- REACT$summary %>% tail(1)
+    round(last_df[1, "ROI%",drop=T]/REACT$duration_n*100,2)
+  })
   
   # SIMULATION and ANALYSIS ####
   
@@ -192,9 +200,45 @@ server <- function(input, output) {
     
     # cumulative calc
     sum_df[,"cum_Invested"] <- cumsum(sum_df$buy_value)
-    sum_df[,"tot_Owned"] <- cumsum(sum_df$buy_qnt)
+    sum_df[,"tot_qnt"] <- cumsum(sum_df$buy_qnt)
     
-    sum_df[,"cum_Value"] <- with(sum_df, tot_Owned*Price)
+    sum_df[,"cum_Value"] <- with(sum_df, tot_qnt*Price)
+    
+    # ROI
+    sum_df[,"PNL"] <- with(sum_df, cum_Value-cum_Invested)
+    sum_df[,"ROI%"] <- with(sum_df, PNL/cum_Invested)
+    
+    # ORGANIZE RESULTS
+    res <- sum_df
+    
+    return(res)
+  }
+  
+  DCA_summary_week <- function(df, infl_correction = FALSE){
+    df[,"Year"] <- year(df$Date) #variable for summary
+    df[,"Week"] <- week(df$Date) 
+    df[,"Group"] <- paste(df$"Year", df$Week, sep="-")  #for grouping
+    
+    # filter for Price_AVG or Price_Adj
+    if (infl_correction == TRUE){
+      df %<>% subset(PriceMethod == "Price_Adj")}
+    else{
+      df %<>% subset(PriceMethod == "Price_AVG")}
+    
+    sum_df <- df %>% 
+      group_by(Group) %>%
+      summarise(Date = min(Date),
+                buy_value = sum(buy_value),
+                buy_qnt  = sum(buy_qnt),
+                Price = mean(Price),
+                asset = head(asset, 1)
+      )
+    
+    # cumulative calc
+    sum_df[,"cum_Invested"] <- cumsum(sum_df$buy_value)
+    sum_df[,"tot_qnt"] <- cumsum(sum_df$buy_qnt)
+    
+    sum_df[,"cum_Value"] <- with(sum_df, tot_qnt*Price)
     
     # ROI
     sum_df[,"PNL"] <- with(sum_df, cum_Value-cum_Invested)
@@ -227,23 +271,92 @@ server <- function(input, output) {
   observeEvent(input$symbolsubmit,
                {updateSimulation()})
        
-   # PLOTS AND TABLES ####                
-   output$hist <- renderPlot({
+  # PLOTS AND TABLES ####
+  # > Yearly Accumulation ####
+   output$dca_qnt <- renderPlot({
      updateSimulation()
      
-     tidy_df <- pivot_longer(REACT$summary, 
-                             cols=starts_with("cum_"), values_to = "Value",
-                             names_to = "CumulData", names_prefix = "cum_") 
-     tidy_df %>% 
+     REACT$summary %>% 
        ggplot() +
-       geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
-       scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
-       scale_y_continuous(breaks = scales::breaks_width(50000), 
-                          minor_breaks = scales::breaks_width(10000)) +
-       theme_light(base_size = 14) +
-       theme(legend.position = "right") 
+       geom_col(aes(x=Year, y=tot_qnt, fill="Total"), position=position_identity()) +
+       geom_col(aes(x=Year, y=buy_qnt, fill="Each Year"), position=position_identity()) +
+       scale_y_log10(minor_breaks = scales::breaks_width(10))+
+       #scale_fill_manual(values = c("Total Qnt" = "orange", "Added Qnt" = "#619CFF")) +
+       geom_line(aes(x=Year, 
+                     y=Price/max(Price)*max(tot_qnt), color="Price")) + #scale to show on same scale
+       scale_color_manual(values="red") +
+       ylab("Shares Qnt (Log10)") +
+       ggtitle("Qnt of purchased asset (each year and total)") +
+       theme_light(base_size = 16) +
+       theme(legend.position = "right", 
+             plot.title=element_text(hjust=0.5, face="bold")) 
    })
-                   
+  
+  # > Yearly DCA ####
+     output$dca_val <- renderPlot({
+       updateSimulation()
+       
+       REACT$summary %>% 
+         ggplot() +
+         geom_col(aes(x=Year, y=cum_Invested, fill="Total"), position=position_identity()) +
+         geom_col(aes(x=Year, y=buy_value, fill="Each Year"), position=position_identity()) +
+         scale_fill_manual(values = c("Each Year" = "orange", "Total" = "#619CFF")) +
+         scale_y_continuous(breaks = scales::breaks_width(5000), 
+                            minor_breaks = scales::breaks_width(1000)) +
+         ylab("Invested Value (Buy)") +
+         ggtitle("Amount of invested money (each year, and total)") +
+         theme_light(base_size = 16) +
+         theme(legend.position = "right",
+               plot.title=element_text(hjust=0.5, face="bold")) 
+     })
+  
+  # OLD: REMOVE? ####
+  output$hist <- renderPlot({
+    updateSimulation()
+    
+    tidy_df <- pivot_longer(REACT$summary, 
+                            cols=starts_with("cum_"), values_to = "Value",
+                            names_to = "CumulData", names_prefix = "cum_") 
+    tidy_df %>% 
+      ggplot() +
+      geom_col(aes(x=Year, y=Value, fill=CumulData), position=position_dodge()) +
+      scale_fill_manual(values = c("Invested" = "orange", "Value" = "#619CFF")) +
+      scale_y_continuous(breaks = scales::breaks_width(50000), 
+                         minor_breaks = scales::breaks_width(10000)) +
+      theme_light(base_size = 14) +
+      theme(legend.position = "right") 
+  })
+    
+  output$psych <- renderPlot({
+    updateSimulation()
+    
+    pnl <- REACT$simul %>% DCA_summary_week(input$infl_correction)
+    
+    pnl[,"is.profit"] <- ifelse(pnl$PNL >= 0, "Profit", "Loss")
+    colnames(pnl) %<>% str_replace_all("ROI%", "ROI") #replace text to remove "%"
+    
+    #text feedback
+    output$loss_weeks <- renderText(subset(pnl, PNL < 0) %>% nrow())
+    output$loss_min <- renderText(pnl$ROI %>% min() %>% multiply_by(100) %>% round(1) %>% paste0("%"))
+    output$loss_minValue <- renderText(pnl$PNL %>% min() %>% round(0) %>% format(big.mark=".", decimal.mark=",") %>% paste0("$"))
+    output$end_time <- renderText(REACT$duration_n %>% paste(" years"))
+    output$end_pnl <- renderText(pnl$PNL %>% tail(1) %>% round(0) %>% format(big.mark=".", decimal.mark=",") %>% paste0("$"))
+    output$end_roi <- renderText(pnl$ROI %>% tail(1) %>% multiply_by(100) %>% round(1) %>% paste0("%"))
+    
+    pnl %>% 
+      ggplot() +
+      geom_col(aes(x=Date, y=ROI, fill=is.profit), position=position_identity()) +
+      geom_hline(yintercept = 0) +
+      scale_fill_manual(values = list("Profit" = "springgreen3", "Loss" = "brown1"), ) + 
+      scale_y_continuous(labels = scales::label_percent(),
+        breaks = scales::breaks_width(.50), 
+                         minor_breaks = scales::breaks_width(.10)) +
+      ylab("Value") +
+      theme_light(base_size = 14) +
+      theme(legend.position = "none")
+  })
+  
+  #OLD, REMOVE? TEMP 
    output$pnl <- renderPlot({
      updateSimulation()
      
@@ -295,23 +408,24 @@ output$end_plot <- renderPlot(
                        end_df["Invested", 1] <- df_last[1, "cum_Invested", drop=T] %>% round(0)
                        end_df["Value", 1] <- df_last[1, "cum_Value"] %>% round(0)
                        end_df["Returns (PNL)", 1] <-df_last[1, "PNL"] %>% round(0)
-                       end_df["Returns (PNL)", 2] <-df_last[1, "ROI%"]*100
-                       end_df["Yearly Return", 2] <- 100*df_last[1, "ROI%", drop=T]/duration
+                       end_df["Returns (%)", 1] <- round(df_last[1, "ROI%"]*100,1)
                        
-                       colnames(end_df) <- c("Total", "ROI %")
+                       colnames(end_df) <- c("Simulated Data")
                        
+                       # ENDPOINT: TABLE
                        output$endopoints <- renderTable(align = "r", #render table
-                         rownames = TRUE, colnames = TRUE,
+                         rownames = TRUE, colnames = F,
                          {
                            # Text formatting (units)
-                           end_df[,1] %<>% format(big.mark=".", decimal.mark = ",") %>%
+                           end_df[1:3,1] %<>% format(big.mark=".", decimal.mark = ",") %>%
                              paste("$") %>% str_replace("NA .", "")
                            
-                           end_df[,2] %<>% round(2) %>% paste("%") %>% str_replace("NA %", "")
+                           end_df[4,1] %<>% paste("%") %>% str_replace("NA %", "")
                            
                            end_df
                            }) 
                        
+                       # ENDPOINT: PLOT
                        end_plot <- data.frame(
                          Total = factor(c("Invested", "Value", "Returns (PNL)"), 
                                         levels = c("Invested", "Value", "Returns (PNL)")), #to ensure correct order in plot legend
@@ -328,7 +442,7 @@ output$end_plot <- renderPlot(
                                        #y=Value + max(Value/20), #calculate max value then /20 = 5% of plot size 
                                        y=Value*0.5, # middle of bar 
                                        label=format(Value, big.mark=".", decimal.mark=",") %>% paste("$")),
-                                  size=5
+                                  size=4
                                    ) +
                          theme_classic(base_size = 16) +
                          theme(axis.title.x = element_blank(), axis.text.x = element_text(face="bold"),
