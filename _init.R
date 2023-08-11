@@ -19,7 +19,7 @@ u <- function(text){ #quick formatting
   return(underlinedText)
 }
 
-text_col <- function(text, color="#84b0fa"){ #quick formatting "#375a7f"
+text_col <- function(text, color="#619CFF"){ #quick formatting "#375a7f"
   formatted <- span(style=paste0("color:",color),
                     text)
   return(formatted)

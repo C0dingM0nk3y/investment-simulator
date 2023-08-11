@@ -78,7 +78,7 @@ server <- function(input, output) {
                label=paste("Start:",input$startdate), 
                hjust=0, fill="cornflowerblue", color="white",
                x=as.POSIXct(input$startdate+180), y=max(data$Price)*0.9) +
-      theme_classic(base_size = 12) +
+      theme_classic(base_size = 14) +
       theme(axis.title.x = element_blank(), legend.title = element_blank(), 
             plot.title=element_text(hjust=0.45, size = 16), #center(50%) and size of title
             #plot.title=element_text(size = 16), #center(40%) and bold title
@@ -136,14 +136,14 @@ server <- function(input, output) {
              sstrong(input$startdate), today(), sstrong(paste0("(",REACT$duration_n, "years)")))
      }) 
   
+  output$yield <- renderText({
+    last_df <- REACT$summary %>% tail(1)
+    round(last_df[1, "PNL",drop=T],0) %>% format(big.mark=".", decimal.mark=",")
+  })
+  
   output$apy <- renderText({
     last_df <- REACT$summary %>% tail(1)
     round(last_df[1, "ROI%",drop=T]/REACT$duration_n*100,2)
-  })
-  
-  output$yield <- renderText({
-    last_df <- REACT$summary %>% tail(1)
-    round(last_df[1, "PNL",drop=T],2)
   })
   
   # SIMULATION and ANALYSIS ####
@@ -338,14 +338,15 @@ server <- function(input, output) {
     #text feedback
     output$loss_weeks <- renderText(subset(pnl, PNL < 0) %>% nrow())
     output$loss_min <- renderText(pnl$ROI %>% min() %>% multiply_by(100) %>% round(1) %>% paste0("%"))
-    output$loss_minValue <- renderText(pnl$PNL %>% min() %>% round(0) %>% format(big.mark=".") %>% paste0("$"))
+    output$loss_minValue <- renderText(pnl$PNL %>% min() %>% round(0) %>% format(big.mark=".", decimal.mark=",") %>% paste0("$"))
     output$end_time <- renderText(REACT$duration_n %>% paste(" years"))
-    output$end_pnl <- renderText(pnl$PNL %>% tail(1) %>% round(0) %>% format(big.mark=".") %>% paste0("$"))
+    output$end_pnl <- renderText(pnl$PNL %>% tail(1) %>% round(0) %>% format(big.mark=".", decimal.mark=",") %>% paste0("$"))
     output$end_roi <- renderText(pnl$ROI %>% tail(1) %>% multiply_by(100) %>% round(1) %>% paste0("%"))
     
     pnl %>% 
       ggplot() +
       geom_col(aes(x=Date, y=ROI, fill=is.profit), position=position_identity()) +
+      geom_hline(yintercept = 0) +
       scale_fill_manual(values = list("Profit" = "springgreen3", "Loss" = "brown1"), ) + 
       scale_y_continuous(labels = scales::label_percent(),
         breaks = scales::breaks_width(.50), 
