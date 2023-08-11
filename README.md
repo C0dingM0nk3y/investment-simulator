@@ -30,7 +30,7 @@ I wrote the DCA simulator to show that
 - **there is no need to panic when the value of our assets goes down**. _Unless extremely lucky/skilled in timing the best moment to begin a new investment, **even the most profitable long-term investment go through phases during which their value decreases**. This is an expected component of financial cycles and should not cause panic. In fact, most gain will come from sticking to the investment plan **during those times**._
 
 
-### Challenges and suggestion of use
+### Challenges and suggestion of use [to be completed]
 
 - *Task 1: bad investments*
 - *Task 2: the effect of time*
