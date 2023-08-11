@@ -1,6 +1,8 @@
 # investment-simulator
 
-_version 1.0_: pre-release for testing. UI and UX will be improved on a later stage.
+_version 1.0_: pre-release for testing. UI and UX will be improved on a later stage. \
+\
+Available as a webtool at the address: https://codingmonkey.shinyapps.io/investment-simulator_v1/
 
 ***
 
