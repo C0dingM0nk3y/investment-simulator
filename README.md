@@ -1,6 +1,6 @@
 # investment-simulator
 
-_version 0.1_: pre-release for testing. New functions will be introduced later.
+_version 1.0_: pre-release for testing. UI and UX will be improved on a later stage.
 
 ***
 
