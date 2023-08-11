@@ -61,7 +61,7 @@ server <- function(input, output) {
     
     sliderInput(inputId = "startdate", label=NULL,
                 min = REACT$minDate, max=today()-366,
-                value= REACT$minDate)
+                value= date("2000-01-01"))
     })
   
   # Second, render plot
@@ -133,17 +133,22 @@ server <- function(input, output) {
   output$strategy <- renderText({
      sprintf("Buy %s worth of %s <u>every 30 days</u>, <br> from %s to %s %s",
              sstrong(paste0(input$monthly_inv, "$")), sstrong(input$symbol), 
-             sstrong(input$startdate), today(), sstrong(paste0("(",REACT$duration_n, "years)")))
+             sstrong(input$startdate), today(), sstrong(paste0("(",REACT$duration_n, " years)")))
      }) 
+  
+  output$apy <- renderText({
+    last_df <- REACT$summary %>% tail(1)
+    round(last_df[1, "ROI%",drop=T]/REACT$duration_n*100,2)
+  })
   
   output$yield <- renderText({
     last_df <- REACT$summary %>% tail(1)
     round(last_df[1, "PNL",drop=T],0) %>% format(big.mark=".", decimal.mark=",")
   })
   
-  output$apy <- renderText({
+  output$roi <- renderText({
     last_df <- REACT$summary %>% tail(1)
-    round(last_df[1, "ROI%",drop=T]/REACT$duration_n*100,2)
+    round(100*last_df[1, "ROI%",drop=T],1)
   })
   
   # SIMULATION and ANALYSIS ####
@@ -330,6 +335,15 @@ server <- function(input, output) {
   output$psych <- renderPlot({
     updateSimulation()
     
+    # from standard (YEARLY) simulation
+    last_df <- REACT$summary %>% tail(1)
+    colnames(last_df) %<>% str_replace_all("ROI%", "ROI") #replace text to remove "%"
+    
+    output$end_time <- renderText(REACT$duration_n %>% paste(" years"))
+    output$end_pnl <- renderText(last_df$PNL %>% round(0) %>% format(big.mark=".", decimal.mark=",") %>% paste0("$"))
+    output$end_roi <- renderText(last_df$ROI %>% multiply_by(100) %>% round(1) %>% paste0("%"))
+    
+    #repeat simulation on weekly basis
     pnl <- REACT$simul %>% DCA_summary_week(input$infl_correction)
     
     pnl[,"is.profit"] <- ifelse(pnl$PNL >= 0, "Profit", "Loss")
@@ -339,20 +353,17 @@ server <- function(input, output) {
     output$loss_weeks <- renderText(subset(pnl, PNL < 0) %>% nrow())
     output$loss_min <- renderText(pnl$ROI %>% min() %>% multiply_by(100) %>% round(1) %>% paste0("%"))
     output$loss_minValue <- renderText(pnl$PNL %>% min() %>% round(0) %>% format(big.mark=".", decimal.mark=",") %>% paste0("$"))
-    output$end_time <- renderText(REACT$duration_n %>% paste(" years"))
-    output$end_pnl <- renderText(pnl$PNL %>% tail(1) %>% round(0) %>% format(big.mark=".", decimal.mark=",") %>% paste0("$"))
-    output$end_roi <- renderText(pnl$ROI %>% tail(1) %>% multiply_by(100) %>% round(1) %>% paste0("%"))
     
     pnl %>% 
       ggplot() +
       geom_col(aes(x=Date, y=ROI, fill=is.profit), position=position_identity()) +
       geom_hline(yintercept = 0) +
       scale_fill_manual(values = list("Profit" = "springgreen3", "Loss" = "brown1"), ) + 
-      scale_y_continuous(labels = scales::label_percent(),
-        breaks = scales::breaks_width(.50), 
-                         minor_breaks = scales::breaks_width(.10)) +
+      scale_y_continuous(labels = scales::label_percent()) +
+        #breaks = scales::breaks_width(.25), 
+        #                 minor_breaks = scales::breaks_width(.10)
       ylab("Value") +
-      theme_light(base_size = 14) +
+      theme_light(base_size = 16) +
       theme(legend.position = "none")
   })
   
