@@ -71,12 +71,12 @@ server <- function(input, output) {
       
     ggplot(data) +
       geom_line(aes(x=Date, y=Price, color=PriceMethod)) +
-      geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="cornflowerblue", linewidth =0.9) +
+      geom_vline(xintercept = as.POSIXct(input$startdate), linetype=2, color="#619CFF", linewidth =0.9) +
       ggtitle(head(data$asset,1)) + #name is taken from DF, not from inputs
       scale_color_manual(values = c("Price_AVG" = "black", "Price_Adj" = "orange")) + 
       annotate(geom="label", 
                label=paste("Start:",input$startdate), 
-               hjust=0, fill="cornflowerblue", color="white",
+               hjust=0, fill="#619CFF", color="white",
                x=as.POSIXct(input$startdate+180), y=max(data$Price)*0.9) +
       theme_classic(base_size = 14) +
       theme(axis.title.x = element_blank(), legend.title = element_blank(), 
